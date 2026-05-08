@@ -1,8 +1,6 @@
 export const setupTheme = () => {
     const htmlElement = document.documentElement;
     const themeIcon = document.getElementById('theme-icon');
-    const themeToggle = document.getElementById('theme-toggle');
-
     let isDark = localStorage.getItem('mindspace_theme') === 'dark';
 
     const applyTheme = () => {
@@ -16,12 +14,14 @@ export const setupTheme = () => {
     };
     applyTheme();
 
-    // O onclick evita duplicidade de eventos
-    themeToggle.onclick = () => {
-        isDark = !isDark;
-        applyTheme();
-        localStorage.setItem('mindspace_theme', isDark ? 'dark' : 'light');
-    };
+    // Usando event delegation no document para garantir que o clique pegue 100% das vezes
+    document.addEventListener('click', (e) => {
+        if (e.target.closest('.js-theme-toggle')) {
+            isDark = !isDark;
+            applyTheme();
+            localStorage.setItem('mindspace_theme', isDark ? 'dark' : 'light');
+        }
+    });
 };
 
 export const setupSidebarResizer = () => {
@@ -58,7 +58,6 @@ export const setupSidebarResizer = () => {
     });
 };
 
-// Lógica de Recolher/Expandir as Tarefas
 export const setupSidebarCollapsibles = () => {
     const setupToggle = (toggleId, listId, iconId, storageKey) => {
         const toggleBtn = document.getElementById(toggleId);
@@ -69,10 +68,10 @@ export const setupSidebarCollapsibles = () => {
 
         const applyState = () => {
             if (isCollapsed) {
-                list.classList.add('hidden');
+                list.classList.add('h-0', 'overflow-hidden', 'opacity-0');
                 icon.style.transform = 'rotate(180deg)';
             } else {
-                list.classList.remove('hidden');
+                list.classList.remove('h-0', 'overflow-hidden', 'opacity-0');
                 icon.style.transform = 'rotate(0deg)';
             }
         };
@@ -122,13 +121,34 @@ export const setupCalendar = () => {
     const grid = document.getElementById('calendar-grid');
     const monthYearText = document.getElementById('calendar-month-year');
     const currentDateText = document.getElementById('current-date');
+    const btnBackToday = document.getElementById('btn-back-today');
 
     let selectedDate = new Date();
     let viewDate = new Date();
     viewDate.setDate(1);
 
+    const isDateToday = (dateObj) => {
+        const today = new Date();
+        return dateObj.getDate() === today.getDate() &&
+            dateObj.getMonth() === today.getMonth() &&
+            dateObj.getFullYear() === today.getFullYear();
+    };
+
     const updateHeaderDate = () => {
         currentDateText.textContent = new Intl.DateTimeFormat('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }).format(selectedDate);
+
+        // Verifica se é hoje e muda a cor da UI
+        if (!isDateToday(selectedDate)) {
+            dateWidget.classList.add('bg-primary-container', 'text-on-primary-container');
+            dateWidget.classList.remove('text-primary');
+            currentDateText.classList.remove('text-on-background');
+            btnBackToday.classList.remove('hidden');
+        } else {
+            dateWidget.classList.remove('bg-primary-container', 'text-on-primary-container');
+            dateWidget.classList.add('text-primary');
+            currentDateText.classList.add('text-on-background');
+            btnBackToday.classList.add('hidden');
+        }
     };
 
     const renderCalendarGrid = () => {
@@ -178,6 +198,12 @@ export const setupCalendar = () => {
     });
     document.getElementById('cal-next').addEventListener('click', (e) => {
         e.stopPropagation(); viewDate.setMonth(viewDate.getMonth() + 1); renderCalendarGrid();
+    });
+
+    btnBackToday.addEventListener('click', () => {
+        selectedDate = new Date();
+        updateHeaderDate();
+        renderCalendarGrid();
     });
 
     updateHeaderDate();

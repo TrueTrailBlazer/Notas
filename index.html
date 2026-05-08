@@ -14,7 +14,8 @@
 
     <link href="https://fonts.googleapis.com" rel="preconnect" />
     <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
-    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Inter:wght@400;500&display=swap"
+    <link
+        href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;800&family=Inter:wght@400;500&display=swap"
         rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
         rel="stylesheet" />
@@ -122,7 +123,7 @@
         class="fixed inset-0 z-[200] bg-background flex flex-col items-center justify-center transition-opacity duration-300">
         <div class="bg-surface border border-outline-variant rounded-2xl p-8 max-w-md w-full shadow-2xl">
             <div class="text-center mb-8">
-                <h1 class="font-display text-h1 font-bold text-primary">Notas Diárias</h1>
+                <h1 class="font-display text-4xl font-extrabold text-primary tracking-tight">Notas Diárias</h1>
                 <p class="text-on-surface-variant mt-2">Acesse seu espaço</p>
             </div>
             <div class="flex flex-col gap-4">
@@ -144,8 +145,8 @@
     <nav class="bg-surface-container-lowest shadow-sm h-full fixed left-0 top-0 z-40 flex flex-col py-8 px-4 flex-shrink-0"
         style="width: var(--sidebar-width);">
         <div class="mb-8 px-2">
-            <h1 class="font-display text-h1 font-bold text-primary">Notas Diárias</h1>
-            <p class="font-body-md text-body-md text-on-surface-variant mt-1">Registros diários organizados</p>
+            <h1 class="font-display text-3xl font-extrabold text-primary tracking-tight">Notas Diárias</h1>
+            <p class="font-body-md text-sm text-on-surface-variant mt-1">Registros diários organizados</p>
         </div>
 
         <div class="flex flex-col gap-2 mb-8" id="nav-menu">
@@ -224,14 +225,19 @@
         style="margin-left: var(--sidebar-width);">
         <header
             class="bg-background flex justify-between items-center w-full px-8 md:px-12 py-4 h-20 flex-shrink-0 z-30">
-            <div class="relative z-50">
+            <div class="relative z-50 flex items-center gap-3">
                 <button id="date-widget"
-                    class="flex items-center gap-2 py-2 rounded-full hover:text-primary transition-colors duration-200 group cursor-pointer relative z-50">
+                    class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-surface-container-low transition-colors duration-200 group cursor-pointer border border-transparent">
                     <span
                         class="material-symbols-outlined text-primary group-hover:scale-110 transition-transform duration-200">calendar_today</span>
-                    <span class="font-label-md text-label-md text-on-background font-medium capitalize"
+                    <span class="font-label-md text-label-md font-bold capitalize transition-colors"
                         id="current-date">Carregando...</span>
-                    <span class="material-symbols-outlined text-on-surface-variant text-sm">expand_more</span>
+                    <span class="material-symbols-outlined text-sm opacity-60">expand_more</span>
+                </button>
+
+                <button id="btn-back-today"
+                    class="hidden px-3 py-1.5 bg-primary text-on-primary font-bold text-xs rounded-full hover:bg-secondary transition-colors shadow-sm cursor-pointer">
+                    Voltar para Hoje
                 </button>
 
                 <div id="calendar-dropdown"
@@ -254,8 +260,8 @@
 
             <div class="flex items-center gap-4 text-primary relative z-[100]">
                 <button id="theme-toggle"
-                    class="p-2 rounded-full hover:bg-surface-container-low transition-colors flex items-center justify-center cursor-pointer">
-                    <span class="material-symbols-outlined" id="theme-icon">dark_mode</span>
+                    class="js-theme-toggle p-2 rounded-full hover:bg-surface-container-low transition-colors flex items-center justify-center cursor-pointer">
+                    <span class="material-symbols-outlined pointer-events-none" id="theme-icon">dark_mode</span>
                 </button>
             </div>
         </header>
@@ -300,16 +306,16 @@
                 </div>
             </div>
         </div>
-
-        <button id="fab-add-note"
-            class="fixed bottom-8 right-8 w-14 h-14 bg-primary text-on-primary rounded-2xl ambient-shadow-level-2 hover:scale-105 hover:bg-surface-tint transition-all flex items-center justify-center z-[150] group shadow-lg cursor-pointer">
-            <span
-                class="material-symbols-outlined group-hover:rotate-90 transition-transform duration-300">edit_document</span>
-        </button>
     </main>
 
+    <button id="fab-add-note"
+        class="js-create-note fixed bottom-8 right-8 w-14 h-14 bg-primary text-on-primary rounded-2xl ambient-shadow-level-2 hover:scale-105 hover:bg-surface-tint transition-all flex items-center justify-center z-[500] group shadow-lg cursor-pointer">
+        <span
+            class="material-symbols-outlined group-hover:rotate-90 transition-transform duration-300 pointer-events-none">edit_document</span>
+    </button>
+
     <div id="full-note-modal"
-        class="fixed inset-0 z-[200] hidden items-center justify-center p-6 bg-background/80 backdrop-blur-sm opacity-0 transition-opacity duration-300">
+        class="fixed inset-0 z-[600] hidden items-center justify-center p-6 bg-background/80 backdrop-blur-sm opacity-0 transition-opacity duration-300">
         <div class="bg-surface w-full max-w-5xl h-[85vh] rounded-2xl border border-outline-variant shadow-2xl flex flex-col overflow-hidden transform scale-95 transition-transform duration-300"
             id="modal-content-box">
             <input type="hidden" id="modal-note-id" value="">
@@ -321,19 +327,20 @@
                 <div class="flex gap-2 ml-4">
                     <button id="modal-pin-btn"
                         class="p-2 rounded-full hover:bg-surface-container text-on-surface-variant transition-colors flex items-center justify-center hidden"
-                        title="Fixar"><span class="material-symbols-outlined"
+                        title="Fixar"><span class="material-symbols-outlined pointer-events-none"
                             id="modal-pin-icon">push_pin</span></button>
                     <button id="modal-archive-btn"
                         class="p-2 rounded-full hover:bg-surface-container text-on-surface-variant transition-colors flex items-center justify-center hidden"
-                        title="Arquivar"><span class="material-symbols-outlined"
+                        title="Arquivar"><span class="material-symbols-outlined pointer-events-none"
                             id="modal-archive-icon">inventory_2</span></button>
                     <div class="w-px h-6 bg-outline-variant my-auto mx-1 hidden" id="modal-divider"></div>
                     <button id="delete-note-btn"
                         class="p-2 rounded-full hover:bg-error-container text-error transition-colors flex items-center justify-center hidden"
-                        title="Deletar"><span class="material-symbols-outlined">delete</span></button>
+                        title="Deletar"><span
+                            class="material-symbols-outlined pointer-events-none">delete</span></button>
                     <button id="close-modal-btn"
                         class="p-2 rounded-full hover:bg-surface-container text-on-surface-variant transition-colors flex items-center justify-center ml-2"
-                        title="Fechar"><span class="material-symbols-outlined">close</span></button>
+                        title="Fechar"><span class="material-symbols-outlined pointer-events-none">close</span></button>
                 </div>
             </div>
             <div class="p-8 flex-1 overflow-y-auto bg-surface">
@@ -345,7 +352,7 @@
     </div>
 
     <div id="task-modal"
-        class="fixed inset-0 z-[210] hidden items-center justify-center p-4 bg-background/80 backdrop-blur-sm opacity-0 transition-opacity duration-300">
+        class="fixed inset-0 z-[700] hidden items-center justify-center p-4 bg-background/80 backdrop-blur-sm opacity-0 transition-opacity duration-300">
         <div class="bg-surface border border-outline-variant rounded-2xl p-6 max-w-sm w-full shadow-2xl transform scale-95 transition-transform duration-300"
             id="task-modal-box">
             <h3 class="font-display text-h2 font-semibold mb-4 text-on-background">Gerenciar Tarefa</h3>
@@ -376,7 +383,7 @@
     </div>
 
     <div id="custom-confirm-modal"
-        class="fixed inset-0 z-[220] hidden items-center justify-center p-4 bg-background/80 backdrop-blur-sm opacity-0 transition-opacity duration-300">
+        class="fixed inset-0 z-[800] hidden items-center justify-center p-4 bg-background/80 backdrop-blur-sm opacity-0 transition-opacity duration-300">
         <div class="bg-surface border border-outline-variant rounded-2xl p-6 max-w-sm w-full shadow-2xl transform scale-95 transition-transform duration-300"
             id="custom-confirm-box">
             <h3 id="confirm-title" class="font-display text-h2 font-semibold mb-2 text-on-background">Atenção</h3>

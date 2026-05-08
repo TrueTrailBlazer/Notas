@@ -63,9 +63,8 @@ export const renderNotes = () => {
     active.forEach(n => grids.dashboard.appendChild(createNoteCard(n)));
 
     const btn = document.createElement('button');
-    btn.className = 'bg-surface-container-low rounded-xl border border-dashed border-primary/50 hover:bg-surface hover:border-primary hover:shadow-sm transition-all duration-200 p-card-padding flex flex-col items-center justify-center min-h-[240px] group';
-    btn.innerHTML = `<div class="w-12 h-12 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-200"><span class="material-symbols-outlined text-[24px]">add</span></div><span class="font-h2 text-h2 font-medium text-primary">Criar Nova Nota</span>`;
-    btn.addEventListener('click', () => openModal(null));
+    btn.className = 'js-create-note bg-surface-container-low rounded-xl border border-dashed border-primary/50 hover:bg-surface hover:border-primary hover:shadow-sm transition-all duration-200 p-card-padding flex flex-col items-center justify-center min-h-[240px] group';
+    btn.innerHTML = `<div class="w-12 h-12 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-200 pointer-events-none"><span class="material-symbols-outlined text-[24px]">add</span></div><span class="font-h2 text-h2 font-medium text-primary pointer-events-none">Criar Nova Nota</span>`;
     grids.dashboard.appendChild(btn);
 
     pinned.length ? pinned.forEach(n => grids.pinned.appendChild(createNoteCard(n))) : (grids.pinned ? grids.pinned.innerHTML = '<p class="text-on-surface-variant col-span-full">Nenhuma nota fixada.</p>' : null);
@@ -154,8 +153,11 @@ export const setupNotesLogic = () => {
     });
 
     document.getElementById('close-modal-btn').addEventListener('click', closeModal);
-    document.getElementById('cancel-modal-btn').addEventListener('click', closeModal);
 
-    // FAB finalmente ligado
-    document.getElementById('fab-add-note').addEventListener('click', () => openModal(null));
+    // BLINDAGEM DE CLIQUE P/ OS BOTÕES DE "NOVA NOTA"
+    document.addEventListener('click', (e) => {
+        if (e.target.closest('.js-create-note')) {
+            openModal(null);
+        }
+    });
 };
