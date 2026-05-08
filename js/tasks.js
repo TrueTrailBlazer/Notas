@@ -6,7 +6,6 @@ const fixedList = document.getElementById('fixed-tasks-list');
 const newList = document.getElementById('new-tasks-list');
 const taskInput = document.getElementById('new-task-input');
 
-// Elementos do Modal de Tarefa
 const taskModal = document.getElementById('task-modal');
 const taskModalBox = document.getElementById('task-modal-box');
 const editIdInput = document.getElementById('task-edit-id');
@@ -34,7 +33,6 @@ export const fetchTasks = async () => {
 };
 
 const renderTasks = () => {
-    // Classes de texto ajustadas: line-clamp-3, break-words
     const createHtml = (task) => `
         <li class="flex items-start gap-3 group relative bg-transparent hover:bg-surface-container-low p-2 rounded-lg transition-colors border border-transparent hover:border-outline-variant">
             <div class="mt-0.5 flex-shrink-0">

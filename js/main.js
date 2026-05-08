@@ -1,5 +1,5 @@
 import { checkSession, setupAuth } from './api.js';
-import { setupTheme, setupCalendar, setupSidebarResizer } from './ui.js';
+import { setupTheme, setupCalendar, setupSidebarResizer, setupSidebarCollapsibles } from './ui.js';
 import { fetchTasks, setupTasksLogic } from './tasks.js';
 import { fetchNotes, renderNotes, setupNotesLogic } from './notes.js';
 
@@ -9,7 +9,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const startApp = async () => {
         setupCalendar();
-        setupSidebarResizer(); // Inicia o arrasto da sidebar
+        setupSidebarResizer();
+        setupSidebarCollapsibles();
 
         await fetchTasks();
         await fetchNotes();

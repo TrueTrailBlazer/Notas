@@ -40,7 +40,6 @@
     </script>
     <style>
         :root {
-            /* Variável para a largura da barra lateral. Valor padrão: 280px */
             --sidebar-width: 280px;
         }
 
@@ -120,7 +119,7 @@
     class="bg-background text-on-background font-body-md text-body-md h-screen overflow-hidden flex transition-colors duration-300 relative">
 
     <div id="login-overlay"
-        class="fixed inset-0 z-[100] bg-background flex flex-col items-center justify-center transition-opacity duration-300">
+        class="fixed inset-0 z-[200] bg-background flex flex-col items-center justify-center transition-opacity duration-300">
         <div class="bg-surface border border-outline-variant rounded-2xl p-8 max-w-md w-full shadow-2xl">
             <div class="text-center mb-8">
                 <h1 class="font-display text-h1 font-bold text-primary">Notas Diárias</h1>
@@ -173,20 +172,34 @@
 
         <div class="flex-1 overflow-y-auto overflow-x-hidden px-2 flex flex-col gap-6">
             <div>
-                <h3 class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-3">Tarefas
-                    Fixas</h3>
-                <ul class="flex flex-col gap-2" id="fixed-tasks-list"></ul>
+                <div id="toggle-fixed-tasks"
+                    class="flex items-center gap-1 cursor-pointer group mb-3 select-none w-max">
+                    <span
+                        class="material-symbols-outlined text-[18px] text-on-surface-variant group-hover:text-primary transition-transform duration-200"
+                        id="icon-fixed-tasks">expand_less</span>
+                    <h3
+                        class="font-label-sm text-label-sm text-on-surface-variant group-hover:text-primary uppercase tracking-wider transition-colors">
+                        Tarefas Fixas</h3>
+                </div>
+                <ul class="flex flex-col gap-2 transition-all duration-300" id="fixed-tasks-list"></ul>
             </div>
+
             <div>
-                <h3
-                    class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-3 flex justify-between items-center">
-                    Novas Tarefas
+                <div class="flex justify-between items-center mb-3">
+                    <div id="toggle-new-tasks" class="flex items-center gap-1 cursor-pointer group select-none">
+                        <span
+                            class="material-symbols-outlined text-[18px] text-on-surface-variant group-hover:text-primary transition-transform duration-200"
+                            id="icon-new-tasks">expand_less</span>
+                        <h3
+                            class="font-label-sm text-label-sm text-on-surface-variant group-hover:text-primary uppercase tracking-wider transition-colors">
+                            Novas Tarefas</h3>
+                    </div>
                     <button id="clear-new-tasks"
                         class="text-on-surface-variant hover:text-error transition-colors p-1 rounded-full hover:bg-error-container flex items-center justify-center"
                         title="Limpar tarefas"><span
                             class="material-symbols-outlined text-[18px]">delete_sweep</span></button>
-                </h3>
-                <ul class="flex flex-col gap-2" id="new-tasks-list"></ul>
+                </div>
+                <ul class="flex flex-col gap-2 transition-all duration-300" id="new-tasks-list"></ul>
             </div>
         </div>
 
@@ -213,7 +226,7 @@
             class="bg-background flex justify-between items-center w-full px-8 md:px-12 py-4 h-20 flex-shrink-0 z-30">
             <div class="relative z-50">
                 <button id="date-widget"
-                    class="flex items-center gap-2 py-2 rounded-full hover:text-primary transition-colors duration-200 group">
+                    class="flex items-center gap-2 py-2 rounded-full hover:text-primary transition-colors duration-200 group cursor-pointer relative z-50">
                     <span
                         class="material-symbols-outlined text-primary group-hover:scale-110 transition-transform duration-200">calendar_today</span>
                     <span class="font-label-md text-label-md text-on-background font-medium capitalize"
@@ -222,7 +235,7 @@
                 </button>
 
                 <div id="calendar-dropdown"
-                    class="absolute top-full left-0 mt-2 bg-surface border border-outline-variant rounded-xl shadow-xl p-4 hidden w-64 transform origin-top-left transition-all duration-200 scale-95 opacity-0 z-[100]">
+                    class="absolute top-full left-0 mt-2 bg-surface border border-outline-variant rounded-xl shadow-xl p-4 hidden w-64 transform origin-top-left transition-all duration-200 scale-95 opacity-0 z-[150]">
                     <div class="flex justify-between items-center mb-4">
                         <button id="cal-prev"
                             class="p-1 rounded-full hover:bg-surface-container text-on-surface-variant flex items-center justify-center transition-colors">
@@ -239,9 +252,9 @@
                 </div>
             </div>
 
-            <div class="flex items-center gap-4 text-primary">
+            <div class="flex items-center gap-4 text-primary relative z-[100]">
                 <button id="theme-toggle"
-                    class="p-2 rounded-full hover:bg-surface-container-low transition-colors flex items-center justify-center">
+                    class="p-2 rounded-full hover:bg-surface-container-low transition-colors flex items-center justify-center cursor-pointer">
                     <span class="material-symbols-outlined" id="theme-icon">dark_mode</span>
                 </button>
             </div>
@@ -289,14 +302,14 @@
         </div>
 
         <button id="fab-add-note"
-            class="fixed bottom-8 right-8 w-14 h-14 bg-primary text-on-primary rounded-2xl ambient-shadow-level-2 hover:scale-105 hover:bg-surface-tint transition-all flex items-center justify-center z-50 group">
+            class="fixed bottom-8 right-8 w-14 h-14 bg-primary text-on-primary rounded-2xl ambient-shadow-level-2 hover:scale-105 hover:bg-surface-tint transition-all flex items-center justify-center z-[150] group shadow-lg cursor-pointer">
             <span
                 class="material-symbols-outlined group-hover:rotate-90 transition-transform duration-300">edit_document</span>
         </button>
     </main>
 
     <div id="full-note-modal"
-        class="fixed inset-0 z-[60] hidden items-center justify-center p-6 bg-background/80 backdrop-blur-sm opacity-0 transition-opacity duration-300">
+        class="fixed inset-0 z-[200] hidden items-center justify-center p-6 bg-background/80 backdrop-blur-sm opacity-0 transition-opacity duration-300">
         <div class="bg-surface w-full max-w-5xl h-[85vh] rounded-2xl border border-outline-variant shadow-2xl flex flex-col overflow-hidden transform scale-95 transition-transform duration-300"
             id="modal-content-box">
             <input type="hidden" id="modal-note-id" value="">
@@ -332,25 +345,22 @@
     </div>
 
     <div id="task-modal"
-        class="fixed inset-0 z-[200] hidden items-center justify-center p-4 bg-background/80 backdrop-blur-sm opacity-0 transition-opacity duration-300">
+        class="fixed inset-0 z-[210] hidden items-center justify-center p-4 bg-background/80 backdrop-blur-sm opacity-0 transition-opacity duration-300">
         <div class="bg-surface border border-outline-variant rounded-2xl p-6 max-w-sm w-full shadow-2xl transform scale-95 transition-transform duration-300"
             id="task-modal-box">
             <h3 class="font-display text-h2 font-semibold mb-4 text-on-background">Gerenciar Tarefa</h3>
             <input type="hidden" id="task-edit-id">
-
             <label class="block font-label-sm text-on-surface-variant mb-1">Nome da Tarefa</label>
             <input type="text" id="task-edit-input"
                 class="w-full bg-surface-container-lowest border border-outline-variant rounded-lg p-3 outline-none mb-6 text-on-surface" />
-
             <label
                 class="flex items-center gap-3 cursor-pointer mb-8 group bg-surface-container-low p-3 rounded-lg border border-transparent hover:border-outline-variant transition-all">
                 <input type="checkbox" id="task-edit-fixed" class="sleek-checkbox">
                 <div class="flex flex-col">
                     <span class="text-on-surface font-medium">Tarefa Fixa</span>
-                    <span class="text-on-surface-variant text-xs">Reseta todos os dias automaticamente.</span>
+                    <span class="text-on-surface-variant text-xs">Reseta todos os dias.</span>
                 </div>
             </label>
-
             <div class="flex justify-between items-center">
                 <button id="task-delete-btn"
                     class="p-2 text-error hover:bg-error-container rounded-lg transition-colors flex items-center justify-center"
@@ -366,7 +376,7 @@
     </div>
 
     <div id="custom-confirm-modal"
-        class="fixed inset-0 z-[200] hidden items-center justify-center p-4 bg-background/80 backdrop-blur-sm opacity-0 transition-opacity duration-300">
+        class="fixed inset-0 z-[220] hidden items-center justify-center p-4 bg-background/80 backdrop-blur-sm opacity-0 transition-opacity duration-300">
         <div class="bg-surface border border-outline-variant rounded-2xl p-6 max-w-sm w-full shadow-2xl transform scale-95 transition-transform duration-300"
             id="custom-confirm-box">
             <h3 id="confirm-title" class="font-display text-h2 font-semibold mb-2 text-on-background">Atenção</h3>

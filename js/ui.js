@@ -1,7 +1,8 @@
-// --- TEMA CLARO/ESCURO ---
 export const setupTheme = () => {
     const htmlElement = document.documentElement;
     const themeIcon = document.getElementById('theme-icon');
+    const themeToggle = document.getElementById('theme-toggle');
+
     let isDark = localStorage.getItem('mindspace_theme') === 'dark';
 
     const applyTheme = () => {
@@ -15,37 +16,34 @@ export const setupTheme = () => {
     };
     applyTheme();
 
-    document.getElementById('theme-toggle').addEventListener('click', () => {
+    // O onclick evita duplicidade de eventos
+    themeToggle.onclick = () => {
         isDark = !isDark;
         applyTheme();
         localStorage.setItem('mindspace_theme', isDark ? 'dark' : 'light');
-    });
+    };
 };
 
-// --- REDIMENSIONAR BARRA LATERAL (NOVO) ---
 export const setupSidebarResizer = () => {
     const resizer = document.getElementById('sidebar-resizer');
     const root = document.documentElement;
 
-    // Recupera largura salva
     const savedWidth = localStorage.getItem('mindspace_sidebar_width');
-    if (savedWidth) {
-        root.style.setProperty('--sidebar-width', `${savedWidth}px`);
-    }
+    if (savedWidth) root.style.setProperty('--sidebar-width', `${savedWidth}px`);
 
     let isResizing = false;
 
-    resizer.addEventListener('mousedown', (e) => {
+    resizer.addEventListener('mousedown', () => {
         isResizing = true;
         document.body.style.cursor = 'col-resize';
-        document.body.style.userSelect = 'none'; // Evita selecionar texto sem querer
+        document.body.style.userSelect = 'none';
     });
 
     document.addEventListener('mousemove', (e) => {
         if (!isResizing) return;
         let newWidth = e.clientX;
-        if (newWidth < 220) newWidth = 220; // Largura Mínima
-        if (newWidth > 600) newWidth = 600; // Largura Máxima
+        if (newWidth < 220) newWidth = 220;
+        if (newWidth > 600) newWidth = 600;
         root.style.setProperty('--sidebar-width', `${newWidth}px`);
     });
 
@@ -54,14 +52,44 @@ export const setupSidebarResizer = () => {
             isResizing = false;
             document.body.style.cursor = 'default';
             document.body.style.userSelect = 'auto';
-            // Salva a largura definida
             const currentWidth = getComputedStyle(root).getPropertyValue('--sidebar-width').replace('px', '').trim();
             localStorage.setItem('mindspace_sidebar_width', currentWidth);
         }
     });
 };
 
-// --- MODAL DE CONFIRMAÇÃO ---
+// Lógica de Recolher/Expandir as Tarefas
+export const setupSidebarCollapsibles = () => {
+    const setupToggle = (toggleId, listId, iconId, storageKey) => {
+        const toggleBtn = document.getElementById(toggleId);
+        const list = document.getElementById(listId);
+        const icon = document.getElementById(iconId);
+
+        let isCollapsed = localStorage.getItem(storageKey) === 'true';
+
+        const applyState = () => {
+            if (isCollapsed) {
+                list.classList.add('hidden');
+                icon.style.transform = 'rotate(180deg)';
+            } else {
+                list.classList.remove('hidden');
+                icon.style.transform = 'rotate(0deg)';
+            }
+        };
+        applyState();
+
+        toggleBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            isCollapsed = !isCollapsed;
+            localStorage.setItem(storageKey, isCollapsed);
+            applyState();
+        });
+    };
+
+    setupToggle('toggle-fixed-tasks', 'fixed-tasks-list', 'icon-fixed-tasks', 'mindspace_fixed_collapsed');
+    setupToggle('toggle-new-tasks', 'new-tasks-list', 'icon-new-tasks', 'mindspace_new_collapsed');
+};
+
 export const showConfirm = (title, message) => {
     return new Promise((resolve) => {
         const modal = document.getElementById('custom-confirm-modal');
@@ -88,7 +116,6 @@ export const showConfirm = (title, message) => {
     });
 };
 
-// --- CALENDÁRIO ---
 export const setupCalendar = () => {
     const dateWidget = document.getElementById('date-widget');
     const dropdown = document.getElementById('calendar-dropdown');

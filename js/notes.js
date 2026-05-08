@@ -155,5 +155,7 @@ export const setupNotesLogic = () => {
 
     document.getElementById('close-modal-btn').addEventListener('click', closeModal);
     document.getElementById('cancel-modal-btn').addEventListener('click', closeModal);
+
+    // FAB finalmente ligado
     document.getElementById('fab-add-note').addEventListener('click', () => openModal(null));
 };
