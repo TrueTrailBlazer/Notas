@@ -1,10 +1,17 @@
 import { supabase } from './api.js';
-import { showConfirm, showPrompt } from './ui.js';
+import { showConfirm } from './ui.js';
 
 let tasksData = { fixed: [], new: [] };
 const fixedList = document.getElementById('fixed-tasks-list');
 const newList = document.getElementById('new-tasks-list');
 const taskInput = document.getElementById('new-task-input');
+
+// Elementos do Modal de Tarefa
+const taskModal = document.getElementById('task-modal');
+const taskModalBox = document.getElementById('task-modal-box');
+const editIdInput = document.getElementById('task-edit-id');
+const editTextInput = document.getElementById('task-edit-input');
+const editFixedCheckbox = document.getElementById('task-edit-fixed');
 
 export const checkDailyReset = async () => {
     const today = new Date().toDateString();
@@ -29,26 +36,86 @@ export const fetchTasks = async () => {
 
 const renderTasks = () => {
     const createHtml = (task) => `
-        <li class="flex items-center gap-3 group relative bg-surface hover:bg-surface-container-low p-2 -mx-2 rounded-lg transition-colors">
+        <li class="flex items-center gap-3 group relative bg-transparent hover:bg-surface-container-low p-2 rounded-lg transition-colors border border-transparent hover:border-outline-variant">
             <input class="sleek-checkbox" type="checkbox" ${task.completed ? 'checked' : ''} data-action="toggle" data-id="${task.id}"/>
-            <label class="font-body-md text-body-md text-on-surface cursor-pointer flex-1 transition-colors duration-200 ${task.completed ? 'line-through opacity-60' : ''}" data-action="toggle" data-id="${task.id}">${task.text}</label>
-            
-            <div class="opacity-0 group-hover:opacity-100 flex gap-1 transition-opacity">
-                <button class="text-on-surface-variant hover:text-primary p-1 rounded hover:bg-surface-container" data-action="edit" data-id="${task.id}" title="Editar">
-                    <span class="material-symbols-outlined text-[18px] pointer-events-none">edit</span>
-                </button>
-                <button class="text-on-surface-variant hover:text-primary p-1 rounded hover:bg-surface-container" data-action="pin" data-id="${task.id}" title="${task.is_fixed ? 'Remover Fixação' : 'Fixar Tarefa'}">
-                    <span class="material-symbols-outlined text-[18px] pointer-events-none">${task.is_fixed ? 'push_pin' : 'keep'}</span>
-                </button>
-                <button class="text-on-surface-variant hover:text-error p-1 rounded hover:bg-error-container" data-action="delete" data-id="${task.id}" title="Deletar">
-                    <span class="material-symbols-outlined text-[18px] pointer-events-none">delete</span>
-                </button>
-            </div>
+            <label class="font-body-md text-body-md text-on-surface cursor-pointer flex-1 transition-colors duration-200 ${task.completed ? 'line-through opacity-50' : ''}" data-action="toggle" data-id="${task.id}">${task.text}</label>
+            <button class="text-on-surface-variant hover:text-primary p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" data-action="edit" data-id="${task.id}" title="Gerenciar">
+                <span class="material-symbols-outlined text-[18px] pointer-events-none">edit_note</span>
+            </button>
         </li>
     `;
 
     fixedList.innerHTML = tasksData.fixed.map(createHtml).join('');
     newList.innerHTML = tasksData.new.map(createHtml).join('');
+};
+
+const openTaskModal = (id) => {
+    const task = tasksData.fixed.find(t => t.id === id) || tasksData.new.find(t => t.id === id);
+    if (!task) return;
+
+    editIdInput.value = task.id;
+    editTextInput.value = task.text;
+    editFixedCheckbox.checked = task.is_fixed;
+
+    taskModal.classList.remove('hidden');
+    taskModal.classList.add('flex');
+    setTimeout(() => {
+        taskModal.classList.remove('opacity-0');
+        taskModalBox.classList.remove('scale-95');
+        editTextInput.focus();
+    }, 10);
+};
+
+const closeTaskModal = () => {
+    taskModal.classList.add('opacity-0');
+    taskModalBox.classList.add('scale-95');
+    setTimeout(() => {
+        taskModal.classList.add('hidden');
+        taskModal.classList.remove('flex');
+    }, 300);
+};
+
+const saveTaskFromModal = async () => {
+    const id = parseInt(editIdInput.value);
+    const newText = editTextInput.value.trim();
+    const isFixed = editFixedCheckbox.checked;
+
+    if (!newText) return;
+
+    let task = tasksData.fixed.find(t => t.id === id) || tasksData.new.find(t => t.id === id);
+    if (!task) return;
+
+    // Atualiza memoria local
+    task.text = newText;
+    const changedFixState = task.is_fixed !== isFixed;
+    task.is_fixed = isFixed;
+
+    // Se mudou de fixa para nova (ou vice-versa), move de array
+    if (changedFixState) {
+        if (isFixed) {
+            tasksData.new = tasksData.new.filter(t => t.id !== id);
+            tasksData.fixed.push(task);
+        } else {
+            tasksData.fixed = tasksData.fixed.filter(t => t.id !== id);
+            tasksData.new.push(task);
+        }
+    }
+
+    renderTasks(); // Optimistic UI
+    closeTaskModal();
+    await supabase.from('tasks').update({ text: newText, is_fixed: isFixed }).eq('id', id);
+};
+
+const deleteTaskFromModal = async () => {
+    const isConfirmed = await showConfirm('Deletar Tarefa', 'Tem certeza que deseja apagar esta tarefa?');
+    if (isConfirmed) {
+        const id = parseInt(editIdInput.value);
+        tasksData.fixed = tasksData.fixed.filter(t => t.id !== id);
+        tasksData.new = tasksData.new.filter(t => t.id !== id);
+        renderTasks();
+        closeTaskModal();
+        await supabase.from('tasks').delete().eq('id', id);
+    }
 };
 
 const handleTaskAction = async (e) => {
@@ -57,47 +124,35 @@ const handleTaskAction = async (e) => {
 
     const action = target.dataset.action;
     const id = parseInt(target.dataset.id);
-    let task = tasksData.fixed.find(t => t.id === id) || tasksData.new.find(t => t.id === id);
-    if (!task) return;
 
     if (action === 'toggle') {
-        task.completed = !task.completed;
-        renderTasks(); // Fast UI update
-        await supabase.from('tasks').update({ completed: task.completed }).eq('id', id);
-    }
-    else if (action === 'edit') {
-        const newText = await showPrompt('Editar Tarefa', task.text);
-        if (newText && newText.trim() !== '') {
-            task.text = newText.trim();
+        let task = tasksData.fixed.find(t => t.id === id) || tasksData.new.find(t => t.id === id);
+        if (task) {
+            task.completed = !task.completed;
             renderTasks();
-            await supabase.from('tasks').update({ text: task.text }).eq('id', id);
+            await supabase.from('tasks').update({ completed: task.completed }).eq('id', id);
         }
-    }
-    else if (action === 'pin') {
-        task.is_fixed = !task.is_fixed;
-        // Move entre as listas locais
-        if (task.is_fixed) { tasksData.new = tasksData.new.filter(t => t.id !== id); tasksData.fixed.push(task); }
-        else { tasksData.fixed = tasksData.fixed.filter(t => t.id !== id); tasksData.new.push(task); }
-        renderTasks();
-        await supabase.from('tasks').update({ is_fixed: task.is_fixed }).eq('id', id);
-    }
-    else if (action === 'delete') {
-        const isConfirmed = await showConfirm('Deletar Tarefa', 'Quer mesmo apagar esta tarefa?');
-        if (isConfirmed) {
-            tasksData.fixed = tasksData.fixed.filter(t => t.id !== id);
-            tasksData.new = tasksData.new.filter(t => t.id !== id);
-            renderTasks();
-            await supabase.from('tasks').delete().eq('id', id);
-        }
+    } else if (action === 'edit') {
+        openTaskModal(id);
     }
 };
 
 export const setupTasksLogic = () => {
     fixedList.addEventListener('click', handleTaskAction);
     newList.addEventListener('click', handleTaskAction);
-    fixedList.addEventListener('change', handleTaskAction); // Para o checkbox
-    newList.addEventListener('change', handleTaskAction);   // Para o checkbox
+    fixedList.addEventListener('change', handleTaskAction);
+    newList.addEventListener('change', handleTaskAction);
 
+    // Eventos do Modal
+    document.getElementById('task-cancel-btn').addEventListener('click', closeTaskModal);
+    document.getElementById('task-save-btn').addEventListener('click', saveTaskFromModal);
+    document.getElementById('task-delete-btn').addEventListener('click', deleteTaskFromModal);
+
+    taskModal.addEventListener('click', (e) => {
+        if (e.target.id === 'task-modal') closeTaskModal();
+    });
+
+    // Adicionar Tarefa
     const addTask = async () => {
         const text = taskInput.value.trim();
         if (text) {
