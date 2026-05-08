@@ -1,5 +1,5 @@
 import { checkSession, setupAuth } from './api.js';
-import { setupTheme, setupCalendar, setupSidebarResizer, setupSidebarCollapsibles } from './ui.js';
+import { setupTheme, setupCalendar, setupSidebarResizer, setupSidebarCollapsibles, setupGlobalGridSize } from './ui.js';
 import { fetchTasks, setupTasksLogic } from './tasks.js';
 import { fetchNotes, renderNotes, setupNotesLogic } from './notes.js';
 
@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
         setupCalendar();
         setupSidebarResizer();
         setupSidebarCollapsibles();
+        setupGlobalGridSize(); // Inicia os tamanhos globais da grade
 
         await fetchTasks();
         await fetchNotes();
