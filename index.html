@@ -11,6 +11,8 @@
     <meta name="theme-color" content="#fdfdf5">
 
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+
     <link href="https://fonts.googleapis.com" rel="preconnect" />
     <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
     <link
@@ -56,11 +58,10 @@
         }
 
         .note-block {
-            transition: all 200ms ease-in-out;
+            transition: all 200ms ease-in-out, transform 0s;
         }
 
         .note-block:hover {
-            transform: translateY(-2px);
             box-shadow: 0px 6px 24px -4px rgba(26, 28, 24, 0.15);
         }
 
@@ -113,7 +114,6 @@
             border-radius: 10px;
         }
 
-        /* Ajustes p/ Modo Lista */
         .list-item-input {
             background: transparent;
             border: none;
@@ -123,6 +123,11 @@
 
         .list-item-input:focus {
             border-bottom: 1px solid #c3c8bb;
+        }
+
+        /* O texto que o JS vai selecionar ao dar duplo clique */
+        .js-selectable-text::selection {
+            background-color: rgba(45, 74, 34, 0.2);
         }
     </style>
 </head>
@@ -286,7 +291,6 @@
                         data-size="large" title="Cards Grandes"><span
                             class="material-symbols-outlined text-[20px] pointer-events-none">view_stream</span></button>
                 </div>
-
                 <button id="theme-toggle"
                     class="js-theme-toggle p-2 rounded-full hover:bg-surface-container-low transition-colors flex items-center justify-center cursor-pointer text-primary">
                     <span class="material-symbols-outlined pointer-events-none" id="theme-icon">dark_mode</span>
@@ -374,7 +378,6 @@
                         class="p-2 rounded-full hover:bg-black/10 text-on-surface-variant transition-colors flex items-center justify-center"
                         title="Mostrar caixas de seleção"><span
                             class="material-symbols-outlined pointer-events-none text-[20px]">checklist</span></button>
-
                     <button id="btn-toggle-size"
                         class="p-2 rounded-full hover:bg-black/10 text-on-surface-variant transition-colors flex items-center justify-center"
                         title="Destacar tamanho do card"><span
@@ -442,6 +445,10 @@
                     class="px-4 py-2 bg-error text-on-error rounded-lg font-medium hover:bg-error-container transition-colors shadow-sm">Confirmar</button>
             </div>
         </div>
+    </div>
+
+    <div id="toast-container"
+        class="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-[1000] flex flex-col gap-2 pointer-events-none">
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

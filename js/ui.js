@@ -21,8 +21,6 @@ export const setupTheme = () => {
 export const setupGlobalGridSize = () => {
     let globalSize = localStorage.getItem('mindspace_grid_size') || 'medium';
     const buttons = document.querySelectorAll('.js-grid-size');
-
-    // As classes que controlam a quantidade de colunas na grade
     const gridClasses = {
         small: ['grid-cols-2', 'md:grid-cols-3', 'lg:grid-cols-4', 'xl:grid-cols-5'],
         medium: ['grid-cols-1', 'md:grid-cols-2', 'lg:grid-cols-3', 'xl:grid-cols-4'],
@@ -30,7 +28,6 @@ export const setupGlobalGridSize = () => {
     };
 
     const applyGridSize = () => {
-        // Atualiza a interface dos botões
         buttons.forEach(btn => {
             if (btn.dataset.size === globalSize) {
                 btn.classList.add('bg-surface', 'shadow-sm', 'text-primary');
@@ -41,21 +38,16 @@ export const setupGlobalGridSize = () => {
             }
         });
 
-        // Aplica as classes Tailwind nos grids
         ['notes-grid', 'pinned-grid', 'archives-grid'].forEach(id => {
             const grid = document.getElementById(id);
             if (grid) {
-                // Remove as classes antigas
                 Object.values(gridClasses).flat().forEach(cls => grid.classList.remove(cls));
-                // Adiciona as novas
                 gridClasses[globalSize].forEach(cls => grid.classList.add(cls));
             }
         });
     };
 
     applyGridSize();
-
-    // Delegação de evento para os botões de tamanho
     document.addEventListener('click', (e) => {
         const btn = e.target.closest('.js-grid-size');
         if (btn) {
@@ -66,7 +58,7 @@ export const setupGlobalGridSize = () => {
     });
 };
 
-export const setupSidebarResizer = () => { /* ... igual ... */
+export const setupSidebarResizer = () => {
     const resizer = document.getElementById('sidebar-resizer');
     const root = document.documentElement;
     const savedWidth = localStorage.getItem('mindspace_sidebar_width');
@@ -89,7 +81,7 @@ export const setupSidebarResizer = () => { /* ... igual ... */
     });
 };
 
-export const setupSidebarCollapsibles = () => { /* ... igual ... */
+export const setupSidebarCollapsibles = () => {
     const setupToggle = (toggleId, listId, iconId, storageKey) => {
         const toggleBtn = document.getElementById(toggleId);
         const list = document.getElementById(listId);
@@ -108,7 +100,7 @@ export const setupSidebarCollapsibles = () => { /* ... igual ... */
     setupToggle('toggle-new-tasks', 'new-tasks-list', 'icon-new-tasks', 'mindspace_new_collapsed');
 };
 
-export const showConfirm = (title, message) => { /* ... igual ... */
+export const showConfirm = (title, message) => {
     return new Promise((resolve) => {
         const modal = document.getElementById('custom-confirm-modal');
         const box = document.getElementById('custom-confirm-box');
@@ -127,7 +119,22 @@ export const showConfirm = (title, message) => { /* ... igual ... */
     });
 };
 
-export const setupCalendar = () => { /* ... igual ao passo anterior, já tinha o Voltar p/ Hoje ... */
+// NOVO: Função Toast
+export const showToast = (message) => {
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = 'bg-surface-variant text-on-surface-variant px-4 py-2 rounded-lg shadow-lg font-body-md text-sm transition-all duration-300 opacity-0 translate-y-4 border border-outline-variant';
+    toast.textContent = message;
+    container.appendChild(toast);
+
+    requestAnimationFrame(() => toast.classList.remove('opacity-0', 'translate-y-4'));
+    setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-4');
+        setTimeout(() => toast.remove(), 300);
+    }, 2500);
+};
+
+export const setupCalendar = () => {
     const dateWidget = document.getElementById('date-widget');
     const dropdown = document.getElementById('calendar-dropdown');
     const grid = document.getElementById('calendar-grid');
