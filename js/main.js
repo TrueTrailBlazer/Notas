@@ -5,9 +5,10 @@ import { fetchNotes, renderNotes, setupNotesLogic } from './notes.js';
 
 document.addEventListener('DOMContentLoaded', () => {
 
-    // Função que roda assim que o login dá sucesso
+    // Liga o visual IMEDIATAMENTE (acaba com o problema do botão de tema não funcionar)
+    setupTheme();
+
     const startApp = async () => {
-        setupTheme();
         setupCalendar();
 
         await fetchTasks();
@@ -17,11 +18,9 @@ document.addEventListener('DOMContentLoaded', () => {
         setupNotesLogic();
     };
 
-    // Verifica Login
     setupAuth(startApp);
     checkSession(startApp);
 
-    // Sistema de Rotas (SPA)
     const switchView = (target) => {
         document.querySelectorAll('.app-view').forEach(view => {
             view.classList.toggle('hidden', view.id !== `view-${target}`);
@@ -38,7 +37,6 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.classList.toggle('border-transparent', !isActive);
             btn.classList.toggle('hover:bg-surface-container', !isActive);
 
-            // Pinta o ícone da aba ativa
             btn.querySelector('span').style.fontVariationSettings = isActive ? "'FILL' 1" : "'FILL' 0";
         });
 

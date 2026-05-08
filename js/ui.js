@@ -1,4 +1,4 @@
-// --- 1. TEMA CLARO/ESCURO ---
+// --- TEMA CLARO/ESCURO ---
 export const setupTheme = () => {
     const htmlElement = document.documentElement;
     const themeIcon = document.getElementById('theme-icon');
@@ -14,7 +14,7 @@ export const setupTheme = () => {
         }
     };
 
-    applyTheme(); // Aplica ao carregar
+    applyTheme();
 
     document.getElementById('theme-toggle').addEventListener('click', () => {
         isDark = !isDark;
@@ -23,7 +23,7 @@ export const setupTheme = () => {
     });
 };
 
-// --- 2. MODAL CUSTOMIZADO (Substitui o window.confirm) ---
+// --- MODAL DE CONFIRMAÇÃO ---
 export const showConfirm = (title, message) => {
     return new Promise((resolve) => {
         const modal = document.getElementById('custom-confirm-modal');
@@ -34,20 +34,12 @@ export const showConfirm = (title, message) => {
 
         modal.classList.remove('hidden');
         modal.classList.add('flex');
-        setTimeout(() => {
-            modal.classList.remove('opacity-0');
-            box.classList.remove('scale-95');
-        }, 10);
+        setTimeout(() => { modal.classList.remove('opacity-0'); box.classList.remove('scale-95'); }, 10);
 
         const handleClose = (result) => {
-            modal.classList.add('opacity-0');
-            box.classList.add('scale-95');
-            setTimeout(() => {
-                modal.classList.add('hidden');
-                modal.classList.remove('flex');
-            }, 300);
+            modal.classList.add('opacity-0'); box.classList.add('scale-95');
+            setTimeout(() => { modal.classList.add('hidden'); modal.classList.remove('flex'); }, 300);
 
-            // Remove os listeners para não acumular
             document.getElementById('confirm-ok').onclick = null;
             document.getElementById('confirm-cancel').onclick = null;
             resolve(result);
@@ -58,21 +50,50 @@ export const showConfirm = (title, message) => {
     });
 };
 
-// --- 3. CALENDÁRIO DROPDOWN ---
+// --- MODAL DE PROMPT (INPUT) ---
+export const showPrompt = (title, defaultValue) => {
+    return new Promise((resolve) => {
+        const modal = document.getElementById('custom-prompt-modal');
+        const box = document.getElementById('custom-prompt-box');
+        const input = document.getElementById('prompt-input');
+
+        document.getElementById('prompt-title').textContent = title;
+        input.value = defaultValue;
+
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        setTimeout(() => {
+            modal.classList.remove('opacity-0'); box.classList.remove('scale-95');
+            input.focus();
+        }, 10);
+
+        const handleClose = (result) => {
+            modal.classList.add('opacity-0'); box.classList.add('scale-95');
+            setTimeout(() => { modal.classList.add('hidden'); modal.classList.remove('flex'); }, 300);
+
+            document.getElementById('prompt-ok').onclick = null;
+            document.getElementById('prompt-cancel').onclick = null;
+            resolve(result);
+        };
+
+        document.getElementById('prompt-ok').onclick = () => handleClose(input.value);
+        document.getElementById('prompt-cancel').onclick = () => handleClose(null);
+    });
+};
+
+// --- CALENDÁRIO ---
 export const setupCalendar = () => {
     const dateWidget = document.getElementById('date-widget');
     const dropdown = document.getElementById('calendar-dropdown');
     const grid = document.getElementById('calendar-grid');
     const monthYearText = document.getElementById('calendar-month-year');
 
-    // Atualiza a data no botão (Hoje)
     const now = new Date();
     document.getElementById('current-date').textContent = new Intl.DateTimeFormat('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }).format(now);
 
     const renderCalendarGrid = () => {
         const year = now.getFullYear();
         const month = now.getMonth();
-
         monthYearText.textContent = new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric' }).format(now);
 
         const firstDay = new Date(year, month, 1).getDay();
@@ -81,13 +102,8 @@ export const setupCalendar = () => {
         let html = '';
         const daysOfWeek = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
 
-        // Cabeçalho da semana
         html += daysOfWeek.map(d => `<div class="text-center text-xs font-bold text-on-surface-variant mb-2">${d}</div>`).join('');
-
-        // Espaços vazios antes do dia 1
         for (let i = 0; i < firstDay; i++) html += `<div></div>`;
-
-        // Dias do mês
         for (let i = 1; i <= daysInMonth; i++) {
             const isToday = i === now.getDate();
             const bgClass = isToday ? 'bg-primary text-on-primary' : 'hover:bg-surface-container-low text-on-surface';
@@ -96,22 +112,18 @@ export const setupCalendar = () => {
         grid.innerHTML = html;
     };
 
-    // Toggle ao clicar
     dateWidget.addEventListener('click', (e) => {
-        e.stopPropagation(); // Evita que feche na mesma hora
+        e.stopPropagation();
         if (dropdown.classList.contains('hidden')) {
             renderCalendarGrid();
             dropdown.classList.remove('hidden');
-            setTimeout(() => {
-                dropdown.classList.remove('opacity-0', 'scale-95');
-            }, 10);
+            setTimeout(() => dropdown.classList.remove('opacity-0', 'scale-95'), 10);
         } else {
             dropdown.classList.add('opacity-0', 'scale-95');
             setTimeout(() => dropdown.classList.add('hidden'), 200);
         }
     });
 
-    // Fechar ao clicar fora
     document.addEventListener('click', (e) => {
         if (!dropdown.contains(e.target) && !dateWidget.contains(e.target)) {
             dropdown.classList.add('opacity-0', 'scale-95');

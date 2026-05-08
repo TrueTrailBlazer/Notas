@@ -68,11 +68,11 @@ export const renderNotes = () => {
     btn.addEventListener('click', () => openModal(null));
     grids.dashboard.appendChild(btn);
 
-    pinned.length ? pinned.forEach(n => grids.pinned.appendChild(createNoteCard(n))) : (grids.pinned ? grids.pinned.innerHTML = '<p class="text-on-surface-variant">Nenhuma nota fixada.</p>' : null);
-    archived.length ? archived.forEach(n => grids.archives.appendChild(createNoteCard(n))) : (grids.archives ? grids.archives.innerHTML = '<p class="text-on-surface-variant">Seu arquivo está vazio.</p>' : null);
+    pinned.length ? pinned.forEach(n => grids.pinned.appendChild(createNoteCard(n))) : (grids.pinned ? grids.pinned.innerHTML = '<p class="text-on-surface-variant col-span-full">Nenhuma nota fixada.</p>' : null);
+    archived.length ? archived.forEach(n => grids.archives.appendChild(createNoteCard(n))) : (grids.archives ? grids.archives.innerHTML = '<p class="text-on-surface-variant col-span-full">Seu arquivo está vazio.</p>' : null);
 };
 
-// --- Modal & Autosave ---
+// --- Modal & Autosave (Optimistic UI - Zero Lag) ---
 let tempPinned = false, tempArchived = false;
 
 const openModal = (id) => {
@@ -103,20 +103,30 @@ const updateIcons = () => {
 };
 
 const executeAutosave = debounce(async () => {
-    const id = document.getElementById('modal-note-id').value;
+    const idStr = document.getElementById('modal-note-id').value;
     const payload = {
         title: document.getElementById('modal-title').value.trim() || 'Sem título',
         content: document.getElementById('modal-body').value.trim(),
         is_pinned: tempPinned, is_archived: tempArchived, date: new Date().toISOString()
     };
 
-    if (id) {
-        await supabase.from('notes').update(payload).eq('id', id);
+    if (idStr) {
+        const id = parseInt(idStr);
+        // Atualiza a memória instantaneamente para zerar o lag
+        const index = notesData.findIndex(n => n.id === id);
+        if (index > -1) notesData[index] = { ...notesData[index], ...payload };
+        renderNotes(); // Atualiza a grid por trás sem travar a tela
+
+        // Salva no banco no background
+        supabase.from('notes').update(payload).eq('id', id).then();
     } else {
         const { data } = await supabase.from('notes').insert([payload]).select();
-        if (data && data.length > 0) document.getElementById('modal-note-id').value = data[0].id;
+        if (data && data.length > 0) {
+            document.getElementById('modal-note-id').value = data[0].id;
+            notesData.unshift(data[0]);
+            renderNotes();
+        }
     }
-    await fetchNotes();
 }, 800);
 
 export const setupNotesLogic = () => {
@@ -132,7 +142,6 @@ export const setupNotesLogic = () => {
         setTimeout(() => { modal.classList.add('hidden'); modal.classList.remove('flex'); }, 300);
     };
 
-    // Fechar ao clicar fora
     document.getElementById('full-note-modal').addEventListener('click', (e) => {
         if (e.target.id === 'full-note-modal') closeModal();
     });
@@ -140,9 +149,11 @@ export const setupNotesLogic = () => {
     document.getElementById('delete-note-btn').addEventListener('click', async () => {
         const isConfirmed = await showConfirm('Deletar Nota', 'Esta ação é irreversível. Deseja deletar esta nota permanentemente?');
         if (isConfirmed) {
-            await supabase.from('notes').delete().eq('id', document.getElementById('modal-note-id').value);
-            await fetchNotes();
+            const id = parseInt(document.getElementById('modal-note-id').value);
+            notesData = notesData.filter(n => n.id !== id);
+            renderNotes(); // UI rápida
             closeModal();
+            supabase.from('notes').delete().eq('id', id).then(); // Background
         }
     });
 
