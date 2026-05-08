@@ -1,10 +1,9 @@
-// Usa a variável injetada pelo Netlify
-const SUPABASE_URL = window.ENV.SUPABASE_URL;
-const SUPABASE_ANON_KEY = window.ENV.SUPABASE_ANON_KEY;
+// Puxa as variáveis geradas pelo Netlify
+const SUPABASE_URL = window.ENV?.SUPABASE_URL;
+const SUPABASE_ANON_KEY = window.ENV?.SUPABASE_ANON_KEY;
 
 export const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// Elementos de Auth
 const loginOverlay = document.getElementById('login-overlay');
 const emailInput = document.getElementById('auth-email');
 const passwordInput = document.getElementById('auth-password');
@@ -25,11 +24,14 @@ export const setupAuth = (onSuccess) => {
         const password = passwordInput.value.trim();
         if (!email || !password) return;
 
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        loginBtn.innerHTML = '<span class="material-symbols-outlined animate-spin">progress_activity</span>';
+
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
 
         if (error) {
-            authError.textContent = error.message;
+            authError.textContent = 'Credenciais inválidas.';
             authError.classList.remove('hidden');
+            loginBtn.innerHTML = '<span>Entrar</span>';
         } else {
             loginOverlay.classList.add('opacity-0');
             setTimeout(() => {

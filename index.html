@@ -1,12 +1,11 @@
 <!DOCTYPE html>
-<html class="light" lang="en">
+<html lang="pt-BR">
 
 <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>MindSpace - Productivity Dashboard</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <link href="https://fonts.googleapis.com" rel="preconnect" />
     <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
@@ -21,35 +20,12 @@
             theme: {
                 extend: {
                     colors: {
-                        primary: "#2d4a22",
-                        "on-primary": "#ffffff",
-                        "primary-container": "#b8f397",
-                        "on-primary-container": "#042100",
-                        secondary: "#56624c",
-                        "on-secondary": "#ffffff",
-                        "secondary-container": "#dae7cb",
-                        "on-secondary-container": "#141e0d",
-                        tertiary: "#386666",
-                        "on-tertiary": "#ffffff",
-                        "tertiary-container": "#bbeceb",
-                        "on-tertiary-container": "#002020",
-                        error: "#ba1a1a",
-                        "on-error": "#ffffff",
-                        "error-container": "#ffdad6",
-                        "on-error-container": "#410002",
-                        background: "#fdfdf5",
-                        "on-background": "#1a1c18",
-                        surface: "#fdfdf5",
-                        "on-surface": "#1a1c18",
-                        "surface-variant": "#dfe4d7",
-                        "on-surface-variant": "#43483f",
-                        outline: "#74796d",
-                        "outline-variant": "#c3c8bb",
-                        "surface-container-lowest": "#ffffff",
-                        "surface-container-low": "#f8f8ef",
-                        "surface-container": "#f2f2e7",
-                        "surface-container-high": "#ecece0",
-                        "surface-container-highest": "#e6e6da",
+                        primary: "#2d4a22", "on-primary": "#ffffff", "primary-container": "#b8f397", "on-primary-container": "#042100",
+                        secondary: "#56624c", "on-secondary": "#ffffff", "secondary-container": "#dae7cb", "on-secondary-container": "#141e0d",
+                        error: "#ba1a1a", "on-error": "#ffffff", "error-container": "#ffdad6", "on-error-container": "#410002",
+                        background: "#fdfdf5", "on-background": "#1a1c18", surface: "#fdfdf5", "on-surface": "#1a1c18",
+                        "surface-variant": "#dfe4d7", "on-surface-variant": "#43483f", outline: "#74796d", "outline-variant": "#c3c8bb",
+                        "surface-container-lowest": "#ffffff", "surface-container-low": "#f8f8ef", "surface-container": "#f2f2e7",
                     },
                     spacing: { "container-padding": "32px", "card-padding": "24px", "gutter": "24px" },
                     fontFamily: { display: ["Geist"], "body-lg": ["Inter"], "body-md": ["Inter"], h2: ["Geist"], "label-md": ["Geist"], "label-sm": ["Geist"], h1: ["Geist"] }
@@ -79,19 +55,32 @@
             border-color: #b8f397;
         }
 
+        /* Checkbox Blindado e Consertado */
         .sleek-checkbox {
             appearance: none;
-            width: 20px;
-            height: 20px;
-            border: 1px solid #74796d;
-            border-radius: 4px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 200ms ease-in-out;
-            cursor: pointer;
             background-color: transparent;
+            margin: 0;
+            width: 1.15em;
+            height: 1.15em;
+            border: 2px solid #74796d;
+            border-radius: 0.25em;
+            display: grid;
+            place-content: center;
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
             flex-shrink: 0;
+        }
+
+        .sleek-checkbox::before {
+            content: "";
+            width: 0.65em;
+            height: 0.65em;
+            transform: scale(0);
+            transition: 120ms transform ease-in-out;
+            box-shadow: inset 1em 1em white;
+            background-color: white;
+            transform-origin: center;
+            clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
         }
 
         .sleek-checkbox:checked {
@@ -99,12 +88,8 @@
             border-color: #2d4a22;
         }
 
-        .sleek-checkbox:checked::after {
-            content: '\e5ca';
-            font-family: 'Material Symbols Outlined';
-            color: white;
-            font-size: 16px;
-            font-variation-settings: 'FILL' 1;
+        .sleek-checkbox:checked::before {
+            transform: scale(1);
         }
 
         ::-webkit-scrollbar {
@@ -123,7 +108,7 @@
 </head>
 
 <body
-    class="bg-background text-on-background font-body-md text-body-md h-screen overflow-hidden flex transition-colors duration-300">
+    class="bg-background text-on-background font-body-md text-body-md h-screen overflow-hidden flex transition-colors duration-300 relative">
 
     <div id="login-overlay"
         class="fixed inset-0 z-[100] bg-background flex flex-col items-center justify-center transition-opacity duration-300">
@@ -131,63 +116,54 @@
             class="bg-surface border border-outline-variant rounded-2xl p-8 max-w-md w-full shadow-2xl ambient-shadow-level-2">
             <div class="text-center mb-8">
                 <h1 class="font-display text-h1 font-bold text-primary">MindSpace</h1>
-                <p class="text-on-surface-variant mt-2">Sign in to access your space</p>
+                <p class="text-on-surface-variant mt-2">Acesse seu espaço</p>
             </div>
-
             <div class="flex flex-col gap-4">
                 <div>
                     <label class="block font-label-sm text-label-sm text-on-surface-variant mb-1">Email</label>
                     <input type="email" id="auth-email"
-                        class="w-full bg-surface-container-lowest border border-outline-variant rounded-lg p-3 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
-                        placeholder="you@example.com">
+                        class="w-full bg-surface-container-lowest border border-outline-variant rounded-lg p-3 outline-none"
+                        placeholder="voce@exemplo.com">
                 </div>
                 <div>
-                    <label class="block font-label-sm text-label-sm text-on-surface-variant mb-1">Password</label>
+                    <label class="block font-label-sm text-label-sm text-on-surface-variant mb-1">Senha</label>
                     <input type="password" id="auth-password"
-                        class="w-full bg-surface-container-lowest border border-outline-variant rounded-lg p-3 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
+                        class="w-full bg-surface-container-lowest border border-outline-variant rounded-lg p-3 outline-none"
                         placeholder="••••••••">
                 </div>
-
-                <div id="auth-error" class="text-error text-sm hidden bg-error-container p-2 rounded">Invalid
-                    credentials.</div>
-
+                <div id="auth-error" class="text-error text-sm hidden bg-error-container p-2 rounded"></div>
                 <button id="btn-login"
-                    class="w-full bg-primary text-on-primary font-bold py-3 rounded-lg mt-2 hover:bg-secondary transition-colors shadow-sm flex justify-center items-center h-12">
-                    <span id="btn-login-text">Enter</span>
-                    <span id="btn-login-spinner"
-                        class="material-symbols-outlined animate-spin hidden">progress_activity</span>
+                    class="w-full bg-primary text-on-primary font-bold py-3 rounded-lg mt-2 hover:bg-secondary transition-colors h-12 flex items-center justify-center">
+                    <span id="btn-login-text">Entrar</span>
                 </button>
             </div>
         </div>
     </div>
 
-    <nav aria-label="Sidebar Navigation"
+    <nav
         class="bg-surface-container-lowest shadow-sm h-full w-[280px] fixed left-0 top-0 z-40 flex flex-col py-8 px-4 flex-shrink-0">
         <div class="mb-8 px-2">
             <h1 class="font-display text-h1 font-bold text-primary">MindSpace</h1>
-            <p class="font-body-md text-body-md text-on-surface-variant mt-1">Stay focused, stay clear</p>
+            <p class="font-body-md text-body-md text-on-surface-variant mt-1">Foco total, mente clara</p>
         </div>
 
         <div class="flex flex-col gap-2 mb-8" id="nav-menu">
             <button data-target="dashboard"
-                class="nav-btn w-full flex items-center gap-3 px-3 py-2 rounded transition-all duration-200 text-primary font-bold border-l-2 border-primary bg-surface-container-low">
-                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">check_circle</span>
-                <span class="font-label-md text-label-md">Daily Tasks</span>
+                class="nav-btn w-full flex items-center gap-3 px-3 py-2 rounded transition-all duration-200">
+                <span class="material-symbols-outlined">check_circle</span> <span
+                    class="font-label-md text-label-md">Tarefas Diárias</span>
             </button>
-            <button data-target="pinned"
-                class="nav-btn w-full flex items-center gap-3 px-3 py-2 rounded text-on-surface-variant hover:bg-surface-container transition-all duration-200 border-l-2 border-transparent">
-                <span class="material-symbols-outlined">push_pin</span>
-                <span class="font-label-md text-label-md">Pinned Notes</span>
+            <button data-target="pinned" class="nav-btn w-full flex items-center gap-3 px-3 py-2 rounded">
+                <span class="material-symbols-outlined">push_pin</span> <span class="font-label-md text-label-md">Notas
+                    Fixadas</span>
             </button>
-            <button data-target="archives"
-                class="nav-btn w-full flex items-center gap-3 px-3 py-2 rounded text-on-surface-variant hover:bg-surface-container transition-all duration-200 border-l-2 border-transparent">
-                <span class="material-symbols-outlined">inventory_2</span>
-                <span class="font-label-md text-label-md">Archives</span>
+            <button data-target="archives" class="nav-btn w-full flex items-center gap-3 px-3 py-2 rounded">
+                <span class="material-symbols-outlined">inventory_2</span> <span
+                    class="font-label-md text-label-md">Arquivo</span>
             </button>
-            <button data-target="settings"
-                class="nav-btn w-full flex items-center gap-3 px-3 py-2 rounded text-on-surface-variant hover:bg-surface-container transition-all duration-200 border-l-2 border-transparent">
-                <span class="material-symbols-outlined">settings</span>
-                <span class="font-label-md text-label-md">Settings</span>
+            <button data-target="settings" class="nav-btn w-full flex items-center gap-3 px-3 py-2 rounded">
+                <span class="material-symbols-outlined">settings</span> <span
+                    class="font-label-md text-label-md">Configurações</span>
             </button>
         </div>
 
@@ -195,17 +171,19 @@
 
         <div class="flex-1 overflow-y-auto px-2 flex flex-col gap-6">
             <div>
-                <h3 class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-3">Fixed
-                    Tasks</h3>
+                <h3 class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-3">Tarefas
+                    Fixas</h3>
                 <ul class="flex flex-col gap-3" id="fixed-tasks-list"></ul>
             </div>
             <div>
                 <h3
                     class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-3 flex justify-between items-center">
-                    New Tasks
+                    Novas Tarefas
                     <button id="clear-new-tasks"
-                        class="text-[10px] text-error hover:underline cursor-pointer lowercase normal-case">clear
-                        all</button>
+                        class="text-on-surface-variant hover:text-error transition-colors p-1 rounded-full hover:bg-error-container flex items-center justify-center"
+                        title="Limpar tarefas">
+                        <span class="material-symbols-outlined text-[18px]">delete_sweep</span>
+                    </button>
                 </h3>
                 <ul class="flex flex-col gap-3" id="new-tasks-list"></ul>
             </div>
@@ -213,14 +191,14 @@
 
         <div class="mt-4 px-2">
             <div
-                class="flex items-center gap-2 bg-surface rounded-lg border border-outline-variant p-2 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-all duration-200">
+                class="flex items-center gap-2 bg-surface rounded-lg border border-outline-variant p-2 focus-within:border-primary">
                 <button id="add-task-btn"
-                    class="text-on-surface-variant hover:text-primary transition-colors duration-200 flex-shrink-0">
+                    class="text-on-surface-variant hover:text-primary transition-colors flex-shrink-0">
                     <span class="material-symbols-outlined">add</span>
                 </button>
                 <input id="new-task-input"
-                    class="w-full bg-transparent border-none p-0 focus:ring-0 font-body-md text-body-md text-on-surface placeholder-on-surface-variant outline-none"
-                    placeholder="Quick add task..." type="text" />
+                    class="w-full bg-transparent border-none p-0 focus:ring-0 text-on-surface outline-none"
+                    placeholder="Adicionar tarefa rápida..." />
             </div>
         </div>
     </nav>
@@ -228,146 +206,136 @@
     <main class="ml-[280px] flex-1 flex flex-col h-full bg-background relative">
         <header
             class="bg-background flex justify-between items-center w-full px-container-padding py-4 h-20 flex-shrink-0 z-30">
-            <button id="date-widget"
-                class="flex items-center gap-2 px-4 py-2 rounded-full hover:bg-surface-container-low transition-colors duration-200 group">
-                <span
-                    class="material-symbols-outlined text-primary group-hover:scale-110 transition-transform duration-200">calendar_today</span>
-                <span class="font-label-md text-label-md text-on-background font-medium"
-                    id="current-date">Loading...</span>
-            </button>
+            <div class="relative z-50">
+                <button id="date-widget"
+                    class="flex items-center gap-2 px-4 py-2 rounded-full hover:bg-surface-container-low transition-colors duration-200 group">
+                    <span
+                        class="material-symbols-outlined text-primary group-hover:scale-110 transition-transform duration-200">calendar_today</span>
+                    <span class="font-label-md text-label-md text-on-background font-medium capitalize"
+                        id="current-date">Carregando...</span>
+                    <span class="material-symbols-outlined text-on-surface-variant text-sm">expand_more</span>
+                </button>
+
+                <div id="calendar-dropdown"
+                    class="absolute top-full left-0 mt-2 bg-surface border border-outline-variant rounded-xl shadow-lg p-4 hidden w-64 ambient-shadow-level-2 transform origin-top-left transition-all duration-200 scale-95 opacity-0">
+                    <div class="flex justify-between items-center mb-4">
+                        <h4 id="calendar-month-year" class="font-h2 text-h2 text-on-background capitalize"></h4>
+                    </div>
+                    <div id="calendar-grid" class="grid grid-cols-7 gap-1">
+                    </div>
+                </div>
+            </div>
+
             <div class="flex items-center gap-4 text-primary">
                 <button id="theme-toggle"
-                    class="p-2 rounded-full hover:bg-surface-container-low transition-colors duration-200 flex items-center justify-center">
+                    class="p-2 rounded-full hover:bg-surface-container-low transition-colors flex items-center justify-center">
                     <span class="material-symbols-outlined" id="theme-icon">dark_mode</span>
                 </button>
             </div>
         </header>
 
-        <div class="flex-1 overflow-y-auto px-container-padding pb-container-padding" id="views-container">
-
+        <div class="flex-1 overflow-y-auto px-container-padding pb-container-padding">
             <div id="view-dashboard" class="app-view max-w-6xl mx-auto w-full">
-                <div class="mb-8 flex justify-between items-end">
-                    <div>
-                        <h2 class="font-display text-h2 font-semibold text-on-background">Your Space</h2>
-                        <p class="font-body-md text-body-md text-on-surface-variant mt-1">Capture ideas, reflect on your
-                            day, and organize your thoughts.</p>
-                    </div>
+                <div class="mb-8">
+                    <h2 class="font-display text-h2 font-semibold">Seu Espaço</h2>
+                    <p class="text-on-surface-variant mt-1">Capture ideias e organize pensamentos.</p>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter" id="notes-grid"></div>
             </div>
-
             <div id="view-pinned" class="app-view max-w-6xl mx-auto w-full hidden">
                 <div class="mb-8">
-                    <h2 class="font-display text-h2 font-semibold text-on-background">Pinned Notes</h2>
-                    <p class="font-body-md text-body-md text-on-surface-variant mt-1">Your most important thoughts,
-                        highlighted for quick access.</p>
+                    <h2 class="font-display text-h2 font-semibold">Fixadas</h2>
+                    <p class="text-on-surface-variant mt-1">Seus pensamentos mais importantes.</p>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter" id="pinned-grid"></div>
             </div>
-
             <div id="view-archives" class="app-view max-w-6xl mx-auto w-full hidden">
                 <div class="mb-8">
-                    <h2 class="font-display text-h2 font-semibold text-on-background">Archives</h2>
-                    <p class="font-body-md text-body-md text-on-surface-variant mt-1">Old notes and completed thoughts
-                        stored safely.</p>
+                    <h2 class="font-display text-h2 font-semibold">Arquivo</h2>
+                    <p class="text-on-surface-variant mt-1">Notas antigas guardadas em segurança.</p>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter" id="archives-grid"></div>
             </div>
-
             <div id="view-settings" class="app-view max-w-6xl mx-auto w-full hidden">
                 <div class="mb-8">
-                    <h2 class="font-display text-h2 font-semibold text-on-background">Settings</h2>
+                    <h2 class="font-display text-h2 font-semibold">Configurações</h2>
                 </div>
                 <div class="bg-surface rounded-xl border border-outline-variant p-6 max-w-xl flex flex-col gap-6">
                     <div>
-                        <h3 class="font-h2 text-h2 mb-2">Account Session</h3>
-                        <p class="text-on-surface-variant mb-4 text-sm">You are securely connected to the cloud
-                            database.</p>
+                        <h3 class="font-h2 text-h2 mb-2">Sessão</h3>
+                        <p class="text-on-surface-variant mb-4 text-sm">Conectado na nuvem segura.</p>
                         <button id="btn-logout"
-                            class="px-4 py-2 border border-outline text-on-surface rounded-lg hover:bg-surface-container transition-colors font-medium">Sign
-                            Out</button>
-                    </div>
-                    <div class="h-px bg-outline-variant w-full"></div>
-                    <div>
-                        <h3 class="font-h2 text-h2 mb-2 text-error">Danger Zone</h3>
-                        <p class="text-on-surface-variant mb-4 text-sm">Clear your local preferences (like theme
-                            selection).</p>
-                        <button id="btn-clear-local"
-                            class="px-4 py-2 bg-error-container text-error rounded-lg hover:bg-[#ffb4ab] hover:text-[#410002] transition-colors font-medium">Clear
-                            Local Cache</button>
+                            class="px-4 py-2 border border-outline text-on-surface rounded-lg hover:bg-surface-container transition-colors font-medium">Sair
+                            da Conta</button>
                     </div>
                 </div>
             </div>
-
             <div class="h-24"></div>
         </div>
 
-        <button id="fab-add-note" aria-label="Create new note"
-            class="fixed bottom-8 right-8 w-14 h-14 bg-primary text-on-primary rounded-2xl ambient-shadow-level-2 hover:scale-105 hover:bg-surface-tint transition-all duration-200 flex items-center justify-center z-50 group">
+        <button id="fab-add-note"
+            class="fixed bottom-8 right-8 w-14 h-14 bg-primary text-on-primary rounded-2xl ambient-shadow-level-2 hover:scale-105 hover:bg-surface-tint transition-all flex items-center justify-center z-50 group">
             <span
                 class="material-symbols-outlined group-hover:rotate-90 transition-transform duration-300">edit_document</span>
         </button>
     </main>
 
     <div id="full-note-modal"
-        class="fixed inset-0 z-50 hidden items-center justify-center p-6 bg-background/80 backdrop-blur-sm opacity-0 transition-opacity duration-300">
+        class="fixed inset-0 z-[60] hidden items-center justify-center p-6 bg-background/80 backdrop-blur-sm opacity-0 transition-opacity duration-300">
         <div class="bg-surface w-full max-w-5xl h-[85vh] rounded-2xl border border-outline-variant shadow-2xl flex flex-col overflow-hidden transform scale-95 transition-transform duration-300"
             id="modal-content-box">
-
             <input type="hidden" id="modal-note-id" value="">
-
             <div
                 class="flex justify-between items-center p-6 border-b border-outline-variant bg-surface-container-lowest">
                 <input type="text" id="modal-title"
                     class="font-display text-h1 font-semibold text-on-background bg-transparent border-none focus:ring-0 w-full outline-none"
-                    placeholder="Note Title">
-
+                    placeholder="Título da Nota">
                 <div class="flex gap-2 ml-4">
                     <button id="modal-pin-btn"
                         class="p-2 rounded-full hover:bg-surface-container text-on-surface-variant transition-colors flex items-center justify-center hidden"
-                        title="Pin Note">
-                        <span class="material-symbols-outlined" id="modal-pin-icon">push_pin</span>
-                    </button>
+                        title="Fixar"><span class="material-symbols-outlined"
+                            id="modal-pin-icon">push_pin</span></button>
                     <button id="modal-archive-btn"
                         class="p-2 rounded-full hover:bg-surface-container text-on-surface-variant transition-colors flex items-center justify-center hidden"
-                        title="Archive Note">
-                        <span class="material-symbols-outlined" id="modal-archive-icon">inventory_2</span>
-                    </button>
-
+                        title="Arquivar"><span class="material-symbols-outlined"
+                            id="modal-archive-icon">inventory_2</span></button>
                     <div class="w-px h-6 bg-outline-variant my-auto mx-1 hidden" id="modal-divider"></div>
-
                     <button id="delete-note-btn"
                         class="p-2 rounded-full hover:bg-error-container text-error transition-colors flex items-center justify-center hidden"
-                        title="Delete Note">
-                        <span class="material-symbols-outlined">delete</span>
-                    </button>
+                        title="Deletar"><span class="material-symbols-outlined">delete</span></button>
                     <button id="close-modal-btn"
                         class="p-2 rounded-full hover:bg-surface-container text-on-surface-variant transition-colors flex items-center justify-center ml-2"
-                        title="Close">
-                        <span class="material-symbols-outlined">close</span>
-                    </button>
+                        title="Fechar"><span class="material-symbols-outlined">close</span></button>
                 </div>
             </div>
-
             <div class="p-8 flex-1 overflow-y-auto bg-surface">
                 <textarea id="modal-body"
                     class="w-full h-full bg-transparent border-none resize-none focus:ring-0 font-body-lg text-body-lg text-on-surface outline-none leading-relaxed"
-                    placeholder="Start typing your thoughts here..."></textarea>
+                    placeholder="Comece a digitar..."></textarea>
             </div>
-
-            <div class="p-4 border-t border-outline-variant bg-surface-container-lowest flex justify-end gap-3">
+            <div class="p-4 border-t border-outline-variant bg-surface-container-lowest flex justify-end">
                 <button id="cancel-modal-btn"
-                    class="px-6 py-2 bg-transparent text-primary hover:bg-surface-container rounded-lg font-medium transition-colors">Cancel</button>
-                <button id="save-modal-btn"
-                    class="px-6 py-2 bg-primary text-on-primary rounded-lg font-medium hover:bg-secondary transition-colors shadow-sm flex items-center gap-2">
-                    <span id="save-btn-text">Save Note</span>
-                    <span id="save-spinner"
-                        class="material-symbols-outlined animate-spin hidden text-[18px]">progress_activity</span>
-                </button>
+                    class="px-6 py-2 bg-primary text-on-primary rounded-lg font-medium hover:bg-secondary transition-colors">Concluído</button>
             </div>
         </div>
     </div>
 
+    <div id="custom-confirm-modal"
+        class="fixed inset-0 z-[200] hidden items-center justify-center p-4 bg-background/80 backdrop-blur-sm opacity-0 transition-opacity duration-300">
+        <div class="bg-surface border border-outline-variant rounded-2xl p-6 max-w-sm w-full shadow-2xl transform scale-95 transition-transform duration-300"
+            id="custom-confirm-box">
+            <h3 id="confirm-title" class="font-display text-h2 font-semibold mb-2 text-on-background">Atenção</h3>
+            <p id="confirm-message" class="text-on-surface-variant mb-6 font-body-md"></p>
+            <div class="flex justify-end gap-3">
+                <button id="confirm-cancel"
+                    class="px-4 py-2 text-primary hover:bg-surface-container rounded-lg font-medium transition-colors">Cancelar</button>
+                <button id="confirm-ok"
+                    class="px-4 py-2 bg-error text-on-error rounded-lg font-medium hover:bg-error-container transition-colors shadow-sm">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script type="module" src="js/main.js"></script>
 </body>
 
