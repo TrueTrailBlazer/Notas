@@ -26,7 +26,6 @@ export const checkDailyReset = async () => {
 export const fetchTasks = async () => {
     await checkDailyReset();
     const { data, error } = await supabase.from('tasks').select('*').order('id');
-
     if (!error && data) {
         tasksData.fixed = data.filter(t => t.is_fixed);
         tasksData.new = data.filter(t => !t.is_fixed);
@@ -35,11 +34,14 @@ export const fetchTasks = async () => {
 };
 
 const renderTasks = () => {
+    // Classes de texto ajustadas: line-clamp-3, break-words
     const createHtml = (task) => `
-        <li class="flex items-center gap-3 group relative bg-transparent hover:bg-surface-container-low p-2 rounded-lg transition-colors border border-transparent hover:border-outline-variant">
-            <input class="sleek-checkbox" type="checkbox" ${task.completed ? 'checked' : ''} data-action="toggle" data-id="${task.id}"/>
-            <label class="font-body-md text-body-md text-on-surface cursor-pointer flex-1 transition-colors duration-200 ${task.completed ? 'line-through opacity-50' : ''}" data-action="toggle" data-id="${task.id}">${task.text}</label>
-            <button class="text-on-surface-variant hover:text-primary p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" data-action="edit" data-id="${task.id}" title="Gerenciar">
+        <li class="flex items-start gap-3 group relative bg-transparent hover:bg-surface-container-low p-2 rounded-lg transition-colors border border-transparent hover:border-outline-variant">
+            <div class="mt-0.5 flex-shrink-0">
+                <input class="sleek-checkbox" type="checkbox" ${task.completed ? 'checked' : ''} data-action="toggle" data-id="${task.id}"/>
+            </div>
+            <label class="font-body-md text-sm text-on-surface cursor-pointer flex-1 transition-colors duration-200 line-clamp-3 break-words leading-snug ${task.completed ? 'line-through opacity-50' : ''}" data-action="toggle" data-id="${task.id}" title="${task.text}">${task.text}</label>
+            <button class="flex-shrink-0 ml-auto text-on-surface-variant hover:text-primary p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" data-action="edit" data-id="${task.id}" title="Gerenciar">
                 <span class="material-symbols-outlined text-[18px] pointer-events-none">edit_note</span>
             </button>
         </li>
@@ -85,12 +87,10 @@ const saveTaskFromModal = async () => {
     let task = tasksData.fixed.find(t => t.id === id) || tasksData.new.find(t => t.id === id);
     if (!task) return;
 
-    // Atualiza memoria local
     task.text = newText;
     const changedFixState = task.is_fixed !== isFixed;
     task.is_fixed = isFixed;
 
-    // Se mudou de fixa para nova (ou vice-versa), move de array
     if (changedFixState) {
         if (isFixed) {
             tasksData.new = tasksData.new.filter(t => t.id !== id);
@@ -101,7 +101,7 @@ const saveTaskFromModal = async () => {
         }
     }
 
-    renderTasks(); // Optimistic UI
+    renderTasks();
     closeTaskModal();
     await supabase.from('tasks').update({ text: newText, is_fixed: isFixed }).eq('id', id);
 };
@@ -143,7 +143,6 @@ export const setupTasksLogic = () => {
     fixedList.addEventListener('change', handleTaskAction);
     newList.addEventListener('change', handleTaskAction);
 
-    // Eventos do Modal
     document.getElementById('task-cancel-btn').addEventListener('click', closeTaskModal);
     document.getElementById('task-save-btn').addEventListener('click', saveTaskFromModal);
     document.getElementById('task-delete-btn').addEventListener('click', deleteTaskFromModal);
@@ -152,7 +151,6 @@ export const setupTasksLogic = () => {
         if (e.target.id === 'task-modal') closeTaskModal();
     });
 
-    // Adicionar Tarefa
     const addTask = async () => {
         const text = taskInput.value.trim();
         if (text) {

@@ -6,10 +6,8 @@
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>Notas Diárias - Painel</title>
 
-    <link rel="icon" type="image/png" href="./favicon.png">
-
-    <link rel="apple-touch-icon" href="./favicon.png">
-
+    <link rel="icon" type="image/png" sizes="32x32" href="./favicon.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="./favicon.png">
     <meta name="theme-color" content="#fdfdf5">
 
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
@@ -41,6 +39,11 @@
         }
     </script>
     <style>
+        :root {
+            /* Variável para a largura da barra lateral. Valor padrão: 280px */
+            --sidebar-width: 280px;
+        }
+
         .ambient-shadow-level-1 {
             box-shadow: 0px 4px 20px -5px rgba(26, 28, 24, 0.04);
         }
@@ -139,8 +142,8 @@
         </div>
     </div>
 
-    <nav
-        class="bg-surface-container-lowest shadow-sm h-full w-[280px] fixed left-0 top-0 z-40 flex flex-col py-8 px-4 flex-shrink-0">
+    <nav class="bg-surface-container-lowest shadow-sm h-full fixed left-0 top-0 z-40 flex flex-col py-8 px-4 flex-shrink-0"
+        style="width: var(--sidebar-width);">
         <div class="mb-8 px-2">
             <h1 class="font-display text-h1 font-bold text-primary">Notas Diárias</h1>
             <p class="font-body-md text-body-md text-on-surface-variant mt-1">Registros diários organizados</p>
@@ -168,7 +171,7 @@
 
         <div class="h-px w-full bg-outline-variant mb-6"></div>
 
-        <div class="flex-1 overflow-y-auto px-2 flex flex-col gap-6">
+        <div class="flex-1 overflow-y-auto overflow-x-hidden px-2 flex flex-col gap-6">
             <div>
                 <h3 class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-3">Tarefas
                     Fixas</h3>
@@ -198,9 +201,14 @@
                     placeholder="Adicionar tarefa rápida..." />
             </div>
         </div>
+
+        <div id="sidebar-resizer"
+            class="absolute top-0 right-0 w-1.5 h-full cursor-col-resize hover:bg-primary/30 transition-colors z-50">
+        </div>
     </nav>
 
-    <main class="ml-[280px] flex-1 flex flex-col h-full bg-background relative">
+    <main class="flex-1 flex flex-col h-full bg-background relative transition-all duration-75"
+        style="margin-left: var(--sidebar-width);">
         <header
             class="bg-background flex justify-between items-center w-full px-8 md:px-12 py-4 h-20 flex-shrink-0 z-30">
             <div class="relative z-50">
@@ -216,7 +224,16 @@
                 <div id="calendar-dropdown"
                     class="absolute top-full left-0 mt-2 bg-surface border border-outline-variant rounded-xl shadow-xl p-4 hidden w-64 transform origin-top-left transition-all duration-200 scale-95 opacity-0 z-[100]">
                     <div class="flex justify-between items-center mb-4">
-                        <h4 id="calendar-month-year" class="font-h2 text-h2 text-on-background capitalize"></h4>
+                        <button id="cal-prev"
+                            class="p-1 rounded-full hover:bg-surface-container text-on-surface-variant flex items-center justify-center transition-colors">
+                            <span class="material-symbols-outlined text-[20px]">chevron_left</span>
+                        </button>
+                        <h4 id="calendar-month-year"
+                            class="font-label-md text-label-md font-bold text-on-background capitalize"></h4>
+                        <button id="cal-next"
+                            class="p-1 rounded-full hover:bg-surface-container text-on-surface-variant flex items-center justify-center transition-colors">
+                            <span class="material-symbols-outlined text-[20px]">chevron_right</span>
+                        </button>
                     </div>
                     <div id="calendar-grid" class="grid grid-cols-7 gap-1"></div>
                 </div>

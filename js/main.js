@@ -1,15 +1,15 @@
 import { checkSession, setupAuth } from './api.js';
-import { setupTheme, setupCalendar } from './ui.js';
+import { setupTheme, setupCalendar, setupSidebarResizer } from './ui.js';
 import { fetchTasks, setupTasksLogic } from './tasks.js';
 import { fetchNotes, renderNotes, setupNotesLogic } from './notes.js';
 
 document.addEventListener('DOMContentLoaded', () => {
 
-    // Liga o visual IMEDIATAMENTE (acaba com o problema do botão de tema não funcionar)
     setupTheme();
 
     const startApp = async () => {
         setupCalendar();
+        setupSidebarResizer(); // Inicia o arrasto da sidebar
 
         await fetchTasks();
         await fetchNotes();

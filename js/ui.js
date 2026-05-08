@@ -22,6 +22,45 @@ export const setupTheme = () => {
     });
 };
 
+// --- REDIMENSIONAR BARRA LATERAL (NOVO) ---
+export const setupSidebarResizer = () => {
+    const resizer = document.getElementById('sidebar-resizer');
+    const root = document.documentElement;
+
+    // Recupera largura salva
+    const savedWidth = localStorage.getItem('mindspace_sidebar_width');
+    if (savedWidth) {
+        root.style.setProperty('--sidebar-width', `${savedWidth}px`);
+    }
+
+    let isResizing = false;
+
+    resizer.addEventListener('mousedown', (e) => {
+        isResizing = true;
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none'; // Evita selecionar texto sem querer
+    });
+
+    document.addEventListener('mousemove', (e) => {
+        if (!isResizing) return;
+        let newWidth = e.clientX;
+        if (newWidth < 220) newWidth = 220; // Largura Mínima
+        if (newWidth > 600) newWidth = 600; // Largura Máxima
+        root.style.setProperty('--sidebar-width', `${newWidth}px`);
+    });
+
+    document.addEventListener('mouseup', () => {
+        if (isResizing) {
+            isResizing = false;
+            document.body.style.cursor = 'default';
+            document.body.style.userSelect = 'auto';
+            // Salva a largura definida
+            const currentWidth = getComputedStyle(root).getPropertyValue('--sidebar-width').replace('px', '').trim();
+            localStorage.setItem('mindspace_sidebar_width', currentWidth);
+        }
+    });
+};
+
 // --- MODAL DE CONFIRMAÇÃO ---
 export const showConfirm = (title, message) => {
     return new Promise((resolve) => {
@@ -49,51 +88,27 @@ export const showConfirm = (title, message) => {
     });
 };
 
-// --- MODAL DE PROMPT (INPUT) ---
-export const showPrompt = (title, defaultValue) => {
-    return new Promise((resolve) => {
-        const modal = document.getElementById('custom-prompt-modal');
-        const box = document.getElementById('custom-prompt-box');
-        const input = document.getElementById('prompt-input');
-
-        document.getElementById('prompt-title').textContent = title;
-        input.value = defaultValue;
-
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-        setTimeout(() => {
-            modal.classList.remove('opacity-0'); box.classList.remove('scale-95');
-            input.focus();
-        }, 10);
-
-        const handleClose = (result) => {
-            modal.classList.add('opacity-0'); box.classList.add('scale-95');
-            setTimeout(() => { modal.classList.add('hidden'); modal.classList.remove('flex'); }, 300);
-
-            document.getElementById('prompt-ok').onclick = null;
-            document.getElementById('prompt-cancel').onclick = null;
-            resolve(result);
-        };
-
-        document.getElementById('prompt-ok').onclick = () => handleClose(input.value);
-        document.getElementById('prompt-cancel').onclick = () => handleClose(null);
-    });
-};
-
-// --- CALENDÁRIO À PROVA DE FALHAS ---
+// --- CALENDÁRIO ---
 export const setupCalendar = () => {
     const dateWidget = document.getElementById('date-widget');
     const dropdown = document.getElementById('calendar-dropdown');
     const grid = document.getElementById('calendar-grid');
     const monthYearText = document.getElementById('calendar-month-year');
+    const currentDateText = document.getElementById('current-date');
 
-    const now = new Date();
-    document.getElementById('current-date').textContent = new Intl.DateTimeFormat('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }).format(now);
+    let selectedDate = new Date();
+    let viewDate = new Date();
+    viewDate.setDate(1);
+
+    const updateHeaderDate = () => {
+        currentDateText.textContent = new Intl.DateTimeFormat('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }).format(selectedDate);
+    };
 
     const renderCalendarGrid = () => {
-        const year = now.getFullYear();
-        const month = now.getMonth();
-        monthYearText.textContent = new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric' }).format(now);
+        const year = viewDate.getFullYear();
+        const month = viewDate.getMonth();
+
+        monthYearText.textContent = new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric' }).format(viewDate);
 
         const firstDay = new Date(year, month, 1).getDay();
         const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -103,34 +118,58 @@ export const setupCalendar = () => {
 
         html += daysOfWeek.map(d => `<div class="text-center text-xs font-bold text-on-surface-variant mb-2">${d}</div>`).join('');
         for (let i = 0; i < firstDay; i++) html += `<div></div>`;
+
+        const today = new Date();
         for (let i = 1; i <= daysInMonth; i++) {
-            const isToday = i === now.getDate();
-            const bgClass = isToday ? 'bg-primary text-on-primary' : 'hover:bg-surface-container-low text-on-surface';
-            html += `<div class="text-center py-1 text-sm rounded-full cursor-pointer transition-colors ${bgClass}">${i}</div>`;
+            const isToday = (i === today.getDate() && month === today.getMonth() && year === today.getFullYear());
+            const isSelected = (i === selectedDate.getDate() && month === selectedDate.getMonth() && year === selectedDate.getFullYear());
+
+            let bgClass = 'hover:bg-surface-container-high text-on-surface';
+            if (isSelected) bgClass = 'bg-primary text-on-primary font-bold shadow-sm';
+            else if (isToday) bgClass = 'border border-primary text-primary font-bold';
+
+            html += `<div class="text-center py-1 text-sm rounded-full cursor-pointer transition-colors ${bgClass}" data-day="${i}">${i}</div>`;
         }
         grid.innerHTML = html;
+
+        grid.querySelectorAll('[data-day]').forEach(dayEl => {
+            dayEl.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const day = parseInt(dayEl.dataset.day);
+                selectedDate = new Date(year, month, day);
+                updateHeaderDate();
+                renderCalendarGrid();
+
+                dropdown.classList.add('opacity-0', 'scale-95');
+                setTimeout(() => dropdown.classList.add('hidden'), 200);
+            });
+        });
     };
 
-    // Abre e fecha o dropdown do calendário
+    document.getElementById('cal-prev').addEventListener('click', (e) => {
+        e.stopPropagation(); viewDate.setMonth(viewDate.getMonth() - 1); renderCalendarGrid();
+    });
+    document.getElementById('cal-next').addEventListener('click', (e) => {
+        e.stopPropagation(); viewDate.setMonth(viewDate.getMonth() + 1); renderCalendarGrid();
+    });
+
+    updateHeaderDate();
+
     dateWidget.addEventListener('click', () => {
         const isHidden = dropdown.classList.contains('hidden');
         if (isHidden) {
+            viewDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
             renderCalendarGrid();
             dropdown.classList.remove('hidden');
-            // Animação garantida via requestAnimationFrame
-            requestAnimationFrame(() => {
-                dropdown.classList.remove('opacity-0', 'scale-95');
-            });
+            requestAnimationFrame(() => dropdown.classList.remove('opacity-0', 'scale-95'));
         } else {
             dropdown.classList.add('opacity-0', 'scale-95');
             setTimeout(() => dropdown.classList.add('hidden'), 200);
         }
     });
 
-    // Fecha se clicar em qualquer outro lugar da tela
     document.addEventListener('click', (e) => {
-        const isClickInside = dateWidget.contains(e.target) || dropdown.contains(e.target);
-        if (!isClickInside && !dropdown.classList.contains('hidden')) {
+        if (!dateWidget.contains(e.target) && !dropdown.contains(e.target) && !dropdown.classList.contains('hidden')) {
             dropdown.classList.add('opacity-0', 'scale-95');
             setTimeout(() => dropdown.classList.add('hidden'), 200);
         }

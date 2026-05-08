@@ -72,7 +72,6 @@ export const renderNotes = () => {
     archived.length ? archived.forEach(n => grids.archives.appendChild(createNoteCard(n))) : (grids.archives ? grids.archives.innerHTML = '<p class="text-on-surface-variant col-span-full">Seu arquivo está vazio.</p>' : null);
 };
 
-// --- Modal & Autosave (Optimistic UI - Zero Lag) ---
 let tempPinned = false, tempArchived = false;
 
 const openModal = (id) => {
@@ -112,12 +111,9 @@ const executeAutosave = debounce(async () => {
 
     if (idStr) {
         const id = parseInt(idStr);
-        // Atualiza a memória instantaneamente para zerar o lag
         const index = notesData.findIndex(n => n.id === id);
         if (index > -1) notesData[index] = { ...notesData[index], ...payload };
-        renderNotes(); // Atualiza a grid por trás sem travar a tela
-
-        // Salva no banco no background
+        renderNotes();
         supabase.from('notes').update(payload).eq('id', id).then();
     } else {
         const { data } = await supabase.from('notes').insert([payload]).select();
@@ -151,9 +147,9 @@ export const setupNotesLogic = () => {
         if (isConfirmed) {
             const id = parseInt(document.getElementById('modal-note-id').value);
             notesData = notesData.filter(n => n.id !== id);
-            renderNotes(); // UI rápida
+            renderNotes();
             closeModal();
-            supabase.from('notes').delete().eq('id', id).then(); // Background
+            supabase.from('notes').delete().eq('id', id).then();
         }
     });
 
