@@ -151,6 +151,10 @@ export const setupCalendar = () => {
 
     const updateHeaderDate = () => {
         currentDateText.textContent = new Intl.DateTimeFormat('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }).format(selectedDate);
+        
+        // Dispara evento global para outros módulos saberem que a data mudou
+        document.dispatchEvent(new CustomEvent('dateChanged', { detail: { date: selectedDate } }));
+
         if (!isDateToday(selectedDate)) {
             dateWidget.classList.add('bg-primary-container', 'text-on-primary-container');
             dateWidget.classList.remove('border-transparent');
@@ -163,6 +167,9 @@ export const setupCalendar = () => {
             btnBackToday.classList.add('hidden');
         }
     };
+    
+    // Inicia com a data atual disparando o evento
+    setTimeout(updateHeaderDate, 0);
 
     const renderCalendarGrid = () => {
         const year = viewDate.getFullYear(); const month = viewDate.getMonth();
@@ -193,7 +200,7 @@ export const setupCalendar = () => {
     document.getElementById('cal-prev').addEventListener('click', (e) => { e.stopPropagation(); viewDate.setMonth(viewDate.getMonth() - 1); renderCalendarGrid(); });
     document.getElementById('cal-next').addEventListener('click', (e) => { e.stopPropagation(); viewDate.setMonth(viewDate.getMonth() + 1); renderCalendarGrid(); });
     btnBackToday.addEventListener('click', () => { selectedDate = new Date(); updateHeaderDate(); renderCalendarGrid(); });
-    updateHeaderDate();
+    // updateHeaderDate(); // Removido pois agora é chamado via timeout inicial
 
     dateWidget.addEventListener('click', () => {
         if (dropdown.classList.contains('hidden')) {
@@ -209,4 +216,5 @@ export const setupCalendar = () => {
             dropdown.classList.add('opacity-0', 'scale-95'); setTimeout(() => dropdown.classList.add('hidden'), 200);
         }
     });
+};
 };

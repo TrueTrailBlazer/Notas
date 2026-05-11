@@ -184,6 +184,12 @@ export const renderNotes = () => {
     const pinned = filteredNotes.filter(n => n.is_pinned && !n.is_archived);
     const archived = filteredNotes.filter(n => n.is_archived);
 
+    // No Dashboard (active), ordenamos para que as fixadas fiquem no topo
+    active.sort((a, b) => {
+        if (a.is_pinned !== b.is_pinned) return b.is_pinned ? -1 : 1;
+        return new Date(b.date) - new Date(a.date);
+    });
+
     active.forEach(n => grids.dashboard.appendChild(createNoteCard(n)));
 
     if (searchQuery === '') {

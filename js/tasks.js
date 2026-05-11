@@ -2,6 +2,9 @@ import { supabase } from './api.js';
 import { showConfirm } from './ui.js';
 
 let tasksData = { fixed: [], new: [] };
+let selectedDate = new Date();
+let sortableFixed, sortableNew;
+
 const fixedList = document.getElementById('fixed-tasks-list');
 const newList = document.getElementById('new-tasks-list');
 const taskInput = document.getElementById('new-task-input');
@@ -12,29 +15,45 @@ const editIdInput = document.getElementById('task-edit-id');
 const editTextInput = document.getElementById('task-edit-input');
 const editFixedCheckbox = document.getElementById('task-edit-fixed');
 
-export const checkDailyReset = async () => {
-    const today = new Date().toDateString();
-    const lastReset = localStorage.getItem('mindspace_last_reset');
+export const fetchTasks = async (date = new Date()) => {
+    selectedDate = date;
+    const dateStr = selectedDate.toISOString().split('T')[0];
 
-    if (lastReset !== today) {
-        await supabase.from('tasks').update({ completed: false }).eq('is_fixed', true);
-        localStorage.setItem('mindspace_last_reset', today);
-    }
-};
+    // 1. Busca as tarefas (fixas ou criadas no dia selecionado)
+    // Ordenamos pelo order_index para garantir a persistência da ordem
+    const { data: tasks, error: tasksError } = await supabase
+        .from('tasks')
+        .select('*')
+        .or(`is_fixed.eq.true,created_date.eq.${dateStr}`)
+        .order('order_index', { ascending: true });
 
-export const fetchTasks = async () => {
-    await checkDailyReset();
-    const { data, error } = await supabase.from('tasks').select('*').order('id');
-    if (!error && data) {
-        tasksData.fixed = data.filter(t => t.is_fixed);
-        tasksData.new = data.filter(t => !t.is_fixed);
-        renderTasks();
-    }
+    if (tasksError) return;
+
+    // 2. Busca o estado de conclusão para esse dia específico
+    const { data: completions, error: compError } = await supabase
+        .from('task_completions')
+        .select('*')
+        .eq('completed_date', dateStr);
+
+    if (compError) return;
+
+    // Mapeia o estado de conclusão para cada tarefa
+    const taskList = tasks.map(t => {
+        const completion = completions.find(c => c.task_id === t.id);
+        return {
+            ...t,
+            completed: completion ? completion.completed : false
+        };
+    });
+
+    tasksData.fixed = taskList.filter(t => t.is_fixed);
+    tasksData.new = taskList.filter(t => !t.is_fixed);
+    renderTasks();
 };
 
 const renderTasks = () => {
     const createHtml = (task) => `
-        <li class="flex items-start gap-3 group relative bg-transparent hover:bg-surface-container-low p-2 rounded-lg transition-colors border border-transparent hover:border-outline-variant">
+        <li class="flex items-start gap-3 group relative bg-transparent hover:bg-surface-container-low p-2 rounded-lg transition-colors border border-transparent hover:border-outline-variant cursor-grab active:cursor-grabbing" data-id="${task.id}">
             <div class="mt-0.5 flex-shrink-0">
                 <input class="sleek-checkbox" type="checkbox" ${task.completed ? 'checked' : ''} data-action="toggle" data-id="${task.id}"/>
             </div>
@@ -47,6 +66,40 @@ const renderTasks = () => {
 
     fixedList.innerHTML = tasksData.fixed.map(createHtml).join('');
     newList.innerHTML = tasksData.new.map(createHtml).join('');
+    
+    setupSortable();
+};
+
+const setupSortable = () => {
+    if (sortableFixed) sortableFixed.destroy();
+    if (sortableNew) sortableNew.destroy();
+
+    const sortOptions = {
+        animation: 150,
+        ghostClass: 'opacity-40',
+        onEnd: async (evt) => {
+            const list = evt.to;
+            const items = Array.from(list.querySelectorAll('li[data-id]'));
+            const updates = items.map((el, index) => ({
+                id: parseInt(el.dataset.id),
+                order_index: index
+            }));
+
+            // Atualiza localmente
+            updates.forEach(u => {
+                const t = tasksData.fixed.find(x => x.id === u.id) || tasksData.new.find(x => x.id === u.id);
+                if (t) t.order_index = u.order_index;
+            });
+
+            // Sincroniza com Supabase
+            for (const u of updates) {
+                await supabase.from('tasks').update({ order_index: u.order_index }).eq('id', u.id);
+            }
+        }
+    };
+
+    sortableFixed = new Sortable(fixedList, sortOptions);
+    sortableNew = new Sortable(newList, sortOptions);
 };
 
 const openTaskModal = (id) => {
@@ -128,7 +181,26 @@ const handleTaskAction = async (e) => {
         if (task) {
             task.completed = !task.completed;
             renderTasks();
-            await supabase.from('tasks').update({ completed: task.completed }).eq('id', id);
+            
+            const dateStr = selectedDate.toISOString().split('T')[0];
+            
+            // Tenta atualizar se já existir um registro para esse dia, senão insere
+            const { data: existing } = await supabase
+                .from('task_completions')
+                .select('*')
+                .eq('task_id', id)
+                .eq('completed_date', dateStr)
+                .single();
+
+            if (existing) {
+                await supabase.from('task_completions').update({ completed: task.completed }).eq('id', existing.id);
+            } else {
+                await supabase.from('task_completions').insert([{ 
+                    task_id: id, 
+                    completed_date: dateStr, 
+                    completed: task.completed 
+                }]);
+            }
         }
     } else if (action === 'edit') {
         openTaskModal(id);
@@ -153,9 +225,21 @@ export const setupTasksLogic = () => {
         const text = taskInput.value.trim();
         if (text) {
             taskInput.value = '';
-            const { data, error } = await supabase.from('tasks').insert([{ text: text, is_fixed: false }]).select();
+            const dateStr = selectedDate.toISOString().split('T')[0];
+            const maxOrder = Math.max(...[...tasksData.fixed, ...tasksData.new].map(t => t.order_index || 0), -1);
+            
+            const { data, error } = await supabase
+                .from('tasks')
+                .insert([{ 
+                    text: text, 
+                    is_fixed: false, 
+                    created_date: dateStr,
+                    order_index: maxOrder + 1
+                }])
+                .select();
+
             if (!error) {
-                tasksData.new.push(data[0]);
+                tasksData.new.push({ ...data[0], completed: false });
                 renderTasks();
             }
         }
@@ -165,11 +249,17 @@ export const setupTasksLogic = () => {
     taskInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') addTask(); });
 
     document.getElementById('clear-new-tasks').addEventListener('click', async () => {
-        const isConfirmed = await showConfirm('Limpar Tarefas', 'Tem certeza que deseja apagar todas as tarefas não-fixas?');
+        const isConfirmed = await showConfirm('Limpar Tarefas', 'Tem certeza que deseja apagar todas as tarefas não-fixas deste dia?');
         if (isConfirmed) {
-            await supabase.from('tasks').delete().eq('is_fixed', false);
+            const dateStr = selectedDate.toISOString().split('T')[0];
+            await supabase.from('tasks').delete().eq('is_fixed', false).eq('created_date', dateStr);
             tasksData.new = [];
             renderTasks();
         }
+    });
+
+    // Escuta mudanças de data do calendário
+    document.addEventListener('dateChanged', (e) => {
+        fetchTasks(e.detail.date);
     });
 };
