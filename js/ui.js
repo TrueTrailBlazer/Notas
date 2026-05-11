@@ -153,7 +153,7 @@ export const setupCalendar = () => {
         currentDateText.textContent = new Intl.DateTimeFormat('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }).format(selectedDate);
         
         // Dispara evento global para outros módulos saberem que a data mudou
-        document.dispatchEvent(new CustomEvent('dateChanged', { detail: { date: selectedDate } }));
+        document.dispatchEvent(new CustomEvent('dateChanged', { detail: { date: new Date(selectedDate) } }));
 
         if (!isDateToday(selectedDate)) {
             dateWidget.classList.add('bg-primary-container', 'text-on-primary-container');

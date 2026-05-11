@@ -15,9 +15,16 @@ const editIdInput = document.getElementById('task-edit-id');
 const editTextInput = document.getElementById('task-edit-input');
 const editFixedCheckbox = document.getElementById('task-edit-fixed');
 
+const formatDateForDB = (date) => {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+};
+
 export const fetchTasks = async (date = new Date()) => {
     selectedDate = date;
-    const dateStr = selectedDate.toLocaleDateString('en-CA');
+    const dateStr = formatDateForDB(selectedDate);
 
     // 1. Busca as tarefas (fixas ou criadas no dia selecionado)
     const { data: tasks, error: tasksError } = await supabase
@@ -26,7 +33,10 @@ export const fetchTasks = async (date = new Date()) => {
         .or(`is_fixed.eq.true,created_date.eq.${dateStr}`)
         .order('order_index', { ascending: true });
 
-    if (tasksError) return;
+    if (tasksError) {
+        console.error('Erro ao buscar tarefas:', tasksError);
+        return;
+    }
 
     // 2. Busca o estado de conclusão para esse dia específico
     const { data: completions, error: compError } = await supabase
@@ -34,7 +44,10 @@ export const fetchTasks = async (date = new Date()) => {
         .select('*')
         .eq('completed_date', dateStr);
 
-    if (compError) return;
+    if (compError) {
+        console.error('Erro ao buscar conclusões:', compError);
+        return;
+    }
 
     // Mapeia o estado de conclusão para cada tarefa
     const taskList = tasks.map(t => {
@@ -93,13 +106,17 @@ const setupSortable = () => {
                 if (t) t.order_index = u.order_index;
             });
 
-            // Re-ordena os arrays internos para manter a consistência em futuros renders
+            // Re-ordena os arrays internos
             if (isFixedList) tasksData.fixed.sort((a, b) => a.order_index - b.order_index);
             else tasksData.new.sort((a, b) => a.order_index - b.order_index);
 
-            // Sincroniza com Supabase em massa ou sequencial (sequencial é mais simples aqui)
-            for (const u of updates) {
-                await supabase.from('tasks').update({ order_index: u.order_index }).eq('id', u.id);
+            // Sincroniza com Supabase
+            try {
+                for (const u of updates) {
+                    await supabase.from('tasks').update({ order_index: u.order_index }).eq('id', u.id);
+                }
+            } catch (err) {
+                console.error('Erro ao salvar ordem:', err);
             }
         }
     };
@@ -190,23 +207,41 @@ const handleTaskAction = async (e) => {
             task.completed = !task.completed;
             renderTasks();
             
-            const dateStr = selectedDate.toLocaleDateString('en-CA');
+            const dateStr = formatDateForDB(selectedDate);
+            console.log(`Togglig task ${id} for date ${dateStr}. New state: ${task.completed}`);
             
-            const { data: existing } = await supabase
-                .from('task_completions')
-                .select('*')
-                .eq('task_id', id)
-                .eq('completed_date', dateStr)
-                .maybeSingle();
+            try {
+                // Tenta encontrar um registro existente para este dia
+                const { data: existing, error: findError } = await supabase
+                    .from('task_completions')
+                    .select('*')
+                    .eq('task_id', id)
+                    .eq('completed_date', dateStr)
+                    .maybeSingle();
 
-            if (existing) {
-                await supabase.from('task_completions').update({ completed: task.completed }).eq('id', existing.id);
-            } else {
-                await supabase.from('task_completions').insert([{ 
-                    task_id: id, 
-                    completed_date: dateStr, 
-                    completed: task.completed 
-                }]);
+                if (findError) throw findError;
+
+                if (existing) {
+                    const { error: updError } = await supabase
+                        .from('task_completions')
+                        .update({ completed: task.completed })
+                        .eq('id', existing.id);
+                    if (updError) throw updError;
+                } else {
+                    const { error: insError } = await supabase
+                        .from('task_completions')
+                        .insert([{ 
+                            task_id: id, 
+                            completed_date: dateStr, 
+                            completed: task.completed 
+                        }]);
+                    if (insError) throw insError;
+                }
+                console.log('Estado de conclusão salvo com sucesso.');
+            } catch (err) {
+                console.error('Erro crítico ao salvar conclusão:', err);
+                // Opcional: Reverter estado na UI se falhar? 
+                // task.completed = !task.completed; renderTasks();
             }
         }
     } else if (action === 'edit') {
@@ -230,7 +265,7 @@ export const setupTasksLogic = () => {
         const text = taskInput.value.trim();
         if (text) {
             taskInput.value = '';
-            const dateStr = selectedDate.toLocaleDateString('en-CA');
+            const dateStr = formatDateForDB(selectedDate);
             const maxOrder = Math.max(...[...tasksData.fixed, ...tasksData.new].map(t => t.order_index || 0), -1);
             
             const { data, error } = await supabase
@@ -257,7 +292,7 @@ export const setupTasksLogic = () => {
     document.getElementById('clear-new-tasks').addEventListener('click', async () => {
         const isConfirmed = await showConfirm('Limpar Tarefas', 'Tem certeza que deseja apagar todas as tarefas não-fixas deste dia?');
         if (isConfirmed) {
-            const dateStr = selectedDate.toLocaleDateString('en-CA');
+            const dateStr = formatDateForDB(selectedDate);
             await supabase.from('tasks').delete().eq('is_fixed', false).eq('created_date', dateStr);
             tasksData.new = [];
             renderTasks();
