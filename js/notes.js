@@ -151,9 +151,8 @@ const onDragEnd = async (evt) => {
     const noteIndex = notesData.findIndex(n => n.id === draggedId);
     notesData[noteIndex].date = newIsoDate;
 
-    // Reordena o array e renderiza (Optimistic UI)
+    // Reordena o array (DOM já foi reordenado pelo SortableJS)
     notesData.sort((a, b) => new Date(b.date) - new Date(a.date));
-    renderNotes();
 
     // Atualiza no banco silenciosamente
     await supabase.from('notes').update({ date: newIsoDate }).eq('id', draggedId);
@@ -230,8 +229,16 @@ const openModal = (id) => {
     updateIcons();
 
     const contentText = note ? note.content : '';
-    if (tempIsList) renderListEditor(contentText);
-    else { document.getElementById('modal-body').value = contentText || ''; toggleEditorMode(false); }
+    if (tempIsList) {
+        renderListEditor(contentText);
+    } else { 
+        const textArea = document.getElementById('modal-body');
+        const listContainer = document.getElementById('modal-list-container');
+        textArea.value = contentText || ''; 
+        listContainer.classList.add('hidden');
+        listContainer.classList.remove('flex');
+        textArea.classList.remove('hidden');
+    }
 
     document.getElementById('delete-note-btn').classList.toggle('hidden', !note);
     document.getElementById('color-popover').classList.add('hidden');
@@ -365,8 +372,24 @@ const executeAutosave = debounce(async () => {
     if (idStr) {
         const id = parseInt(idStr);
         const index = notesData.findIndex(n => n.id === id);
-        if (index > -1) notesData[index] = { ...notesData[index], ...payload };
-        renderNotes();
+        if (index > -1) {
+            const oldNote = notesData[index];
+            const isGridChanged = oldNote.is_pinned !== payload.is_pinned || oldNote.is_archived !== payload.is_archived;
+            notesData[index] = { ...notesData[index], ...payload };
+            
+            if (isGridChanged) {
+                renderNotes(); // Re-renderiza para mover para a grid correta
+            } else {
+                // Atualiza apenas o card específico para evitar travamentos de UI
+                const existingCard = document.querySelector(`.note-block[data-id="${id}"]`);
+                if (existingCard) {
+                    const newCard = createNoteCard(notesData[index]);
+                    existingCard.replaceWith(newCard);
+                } else {
+                    renderNotes();
+                }
+            }
+        }
         supabase.from('notes').update(payload).eq('id', id).then();
     } else {
         payload.date = new Date().toISOString(); // Nova nota ganha data nova
