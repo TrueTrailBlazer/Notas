@@ -165,9 +165,12 @@ export const renderNotes = () => {
 
     const grids = {
         dashboard: document.getElementById('notes-grid'),
+        dashboardPinned: document.getElementById('dashboard-pinned-grid'),
         pinned: document.getElementById('pinned-grid'),
         archives: document.getElementById('archives-grid')
     };
+
+    const pinnedSection = document.getElementById('dashboard-pinned-section');
 
     Object.values(grids).forEach(g => { if (g) g.innerHTML = ''; });
 
@@ -180,18 +183,24 @@ export const renderNotes = () => {
         );
     }
 
-    const active = filteredNotes.filter(n => !n.is_archived);
-    const pinned = filteredNotes.filter(n => n.is_pinned && !n.is_archived);
+    // Separação das notas por categoria
     const archived = filteredNotes.filter(n => n.is_archived);
+    const active = filteredNotes.filter(n => !n.is_archived);
+    const pinnedActive = active.filter(n => n.is_pinned);
+    const regularActive = active.filter(n => !n.is_pinned);
 
-    // No Dashboard (active), ordenamos para que as fixadas fiquem no topo
-    active.sort((a, b) => {
-        if (a.is_pinned !== b.is_pinned) return b.is_pinned ? -1 : 1;
-        return new Date(b.date) - new Date(a.date);
-    });
+    // 1. Dashboard - Pinned
+    if (pinnedActive.length > 0) {
+        pinnedSection.classList.remove('hidden');
+        pinnedActive.forEach(n => grids.dashboardPinned.appendChild(createNoteCard(n)));
+    } else {
+        pinnedSection.classList.add('hidden');
+    }
 
-    active.forEach(n => grids.dashboard.appendChild(createNoteCard(n)));
+    // 2. Dashboard - Regular
+    regularActive.forEach(n => grids.dashboard.appendChild(createNoteCard(n)));
 
+    // Botão de criar nota (sempre no final das notas regulares no dashboard)
     if (searchQuery === '') {
         const btn = document.createElement('button');
         btn.className = 'js-create-note bg-surface-container-low rounded-xl border border-dashed border-primary/50 hover:bg-surface hover:border-primary hover:shadow-sm transition-all duration-200 p-card-padding flex flex-col items-center justify-center min-h-[240px] group col-span-1 row-span-1';
@@ -199,7 +208,10 @@ export const renderNotes = () => {
         grids.dashboard.appendChild(btn);
     }
 
-    pinned.length ? pinned.forEach(n => grids.pinned.appendChild(createNoteCard(n))) : (grids.pinned ? grids.pinned.innerHTML = '<p class="text-on-surface-variant col-span-full">Nenhuma nota encontrada.</p>' : null);
+    // 3. Aba de Fixadas (view dedicada)
+    pinnedActive.length ? pinnedActive.forEach(n => grids.pinned.appendChild(createNoteCard(n))) : (grids.pinned ? grids.pinned.innerHTML = '<p class="text-on-surface-variant col-span-full">Nenhuma nota fixada.</p>' : null);
+    
+    // 4. Arquivo
     archived.length ? archived.forEach(n => grids.archives.appendChild(createNoteCard(n))) : (grids.archives ? grids.archives.innerHTML = '<p class="text-on-surface-variant col-span-full">Arquivo vazio.</p>' : null);
 
     // Inicializa o Drag and Drop nos Grids apenas se houver notas e não for pesquisa
@@ -209,7 +221,7 @@ export const renderNotes = () => {
                 sortableInstances.push(new Sortable(gridEl, {
                     animation: 150,
                     ghostClass: 'opacity-40',
-                    filter: '.js-create-note', // Impede de arrastar o botão de Criar Nova Nota
+                    filter: '.js-create-note',
                     onEnd: onDragEnd
                 }));
             }
